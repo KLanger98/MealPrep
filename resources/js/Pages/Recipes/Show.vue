@@ -78,9 +78,9 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
     <AppLayout>
         <Head :title="recipe.title" />
 
-        <Link :href="route('recipes.index')" class="text-sm text-stone-500 hover:text-stone-800">← All recipes</Link>
+        <Link :href="route('recipes.index')" class="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200">← All recipes</Link>
 
-        <div v-if="recipe.missing" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div v-if="recipe.missing" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
             The file for this recipe (<span class="font-mono">{{ recipe.file_path }}</span>) is missing. Showing the last indexed version.
         </div>
 
@@ -98,7 +98,7 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
                 <button
                     type="button"
                     class="rounded-lg px-3 py-1.5 text-sm shadow-sm"
-                    :class="recipe.image_url ? 'bg-white/90 text-stone-700 hover:bg-white' : 'border border-dashed border-stone-300 text-stone-500 hover:border-green-400 hover:text-green-700'"
+                    :class="recipe.image_url ? 'bg-white/90 text-stone-700 hover:bg-white dark:bg-stone-900/90 dark:text-stone-200 dark:hover:bg-stone-900' : 'border border-dashed border-stone-300 text-stone-500 hover:border-green-400 hover:text-green-700 dark:border-stone-700 dark:text-stone-400 dark:hover:border-green-500 dark:hover:text-green-400'"
                     :disabled="uploadingPhoto"
                     @click="photoInput.click()"
                 >
@@ -107,7 +107,7 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
                 <button
                     v-if="recipe.image_url"
                     type="button"
-                    class="rounded-lg bg-white/90 px-3 py-1.5 text-sm text-red-600 shadow-sm hover:bg-white"
+                    class="rounded-lg bg-white/90 px-3 py-1.5 text-sm text-red-600 shadow-sm hover:bg-white dark:bg-stone-900/90 dark:text-red-400 dark:hover:bg-stone-900"
                     @click="removePhoto"
                 >
                     Remove
@@ -127,50 +127,50 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
             <div>
                 <h1 class="text-3xl font-semibold">{{ recipe.title }}</h1>
                 <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                    <span class="rounded-full bg-green-50 px-2 py-0.5 font-medium capitalize text-green-800">{{ recipe.type }}</span>
-                    <span v-if="recipe.protein" class="rounded-full bg-stone-100 px-2 py-0.5 capitalize text-stone-700">{{ recipe.protein }}</span>
-                    <span v-if="recipe.cost" class="rounded-full bg-stone-100 px-2 py-0.5 text-stone-700">{{ costLabels[recipe.cost] ?? recipe.cost }}</span>
-                    <span v-for="tag in recipe.tags" :key="tag" class="rounded-full bg-stone-100 px-2 py-0.5 text-stone-500">{{ tag }}</span>
+                    <span class="rounded-full bg-green-50 px-2 py-0.5 font-medium capitalize text-green-800 dark:bg-green-950 dark:text-green-300">{{ recipe.type }}</span>
+                    <span v-if="recipe.protein" class="rounded-full bg-stone-100 px-2 py-0.5 capitalize text-stone-700 dark:bg-stone-800 dark:text-stone-300">{{ recipe.protein }}</span>
+                    <span v-if="recipe.cost" class="rounded-full bg-stone-100 px-2 py-0.5 text-stone-700 dark:bg-stone-800 dark:text-stone-300">{{ costLabels[recipe.cost] ?? recipe.cost }}</span>
+                    <span v-for="tag in recipe.tags" :key="tag" class="rounded-full bg-stone-100 px-2 py-0.5 text-stone-500 dark:bg-stone-800 dark:text-stone-400">{{ tag }}</span>
                 </div>
-                <div class="mt-2 flex flex-wrap gap-4 text-sm text-stone-500">
+                <div class="mt-2 flex flex-wrap gap-4 text-sm text-stone-500 dark:text-stone-400">
                     <span v-if="recipe.prep_minutes">Prep {{ recipe.prep_minutes }} min</span>
                     <span v-if="recipe.cook_minutes">Cook {{ recipe.cook_minutes }} min</span>
                     <span v-if="recipe.source">
                         Source:
-                        <a v-if="sourceIsUrl" :href="recipe.source" target="_blank" rel="noopener" class="text-green-700 underline underline-offset-2 hover:text-green-800">{{ sourceLabel }}</a>
+                        <a v-if="sourceIsUrl" :href="recipe.source" target="_blank" rel="noopener" class="text-green-700 underline underline-offset-2 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">{{ sourceLabel }}</a>
                         <span v-else>{{ recipe.source }}</span>
                     </span>
                 </div>
 
                 <div class="mt-3 flex items-center gap-1" @mouseleave="hoverRating = null">
-                    <span class="mr-1 text-sm text-stone-500">Rating:</span>
+                    <span class="mr-1 text-sm text-stone-500 dark:text-stone-400">Rating:</span>
                     <button
                         v-for="star in 10"
                         :key="star"
                         type="button"
                         class="text-lg leading-none transition-colors"
-                        :class="star <= (hoverRating ?? recipe.rating ?? 0) ? 'text-amber-500' : 'text-stone-300 hover:text-amber-300'"
+                        :class="star <= (hoverRating ?? recipe.rating ?? 0) ? 'text-amber-500' : 'text-stone-300 hover:text-amber-300 dark:text-stone-600 dark:hover:text-amber-500'"
                         :title="`${star}/10${star === recipe.rating ? ' (click to clear)' : ''}`"
                         @mouseenter="hoverRating = star"
                         @click="setRating(star)"
                     >
                         ★
                     </button>
-                    <span v-if="recipe.rating !== null" class="ml-1 text-sm font-medium text-stone-700">{{ recipe.rating }}/10</span>
-                    <span v-else class="ml-1 text-sm text-stone-400">not rated</span>
+                    <span v-if="recipe.rating !== null" class="ml-1 text-sm font-medium text-stone-700 dark:text-stone-300">{{ recipe.rating }}/10</span>
+                    <span v-else class="ml-1 text-sm text-stone-400 dark:text-stone-500">not rated</span>
                 </div>
             </div>
             <div class="flex items-center gap-2">
                 <Link
                     v-if="!recipe.missing"
                     :href="route('recipes.edit', recipe.slug)"
-                    class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50"
+                    class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
                 >
                     Edit
                 </Link>
                 <button
                     type="button"
-                    class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                    class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-stone-700 dark:bg-stone-900 dark:text-red-400 dark:hover:bg-red-950"
                     @click="destroyRecipe"
                 >
                     Delete
@@ -180,7 +180,7 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
 
         <div class="mt-6 grid gap-8 lg:grid-cols-[minmax(280px,1fr)_2fr]">
             <aside>
-                <div class="rounded-xl border border-stone-200 bg-white p-4">
+                <div class="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
                     <div class="flex items-center justify-between gap-2">
                         <h2 class="font-semibold">Ingredients</h2>
                         <div class="flex items-center gap-1">
@@ -189,7 +189,7 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
                                 :key="factor"
                                 type="button"
                                 class="rounded-md px-2 py-1 text-xs font-medium"
-                                :class="Math.abs(scale - factor) < 0.001 ? 'bg-green-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'"
+                                :class="Math.abs(scale - factor) < 0.001 ? 'bg-green-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700'"
                                 @click="applyPreset(factor)"
                             >
                                 {{ factor }}×
@@ -197,23 +197,23 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
                         </div>
                     </div>
 
-                    <label class="mt-3 flex items-center gap-2 text-sm text-stone-600">
+                    <label class="mt-3 flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300">
                         <span>Servings:</span>
                         <input
                             v-model.number="targetServings"
                             type="number"
                             min="0.5"
                             step="0.5"
-                            class="w-20 rounded-md border border-stone-300 px-2 py-1 text-sm"
+                            class="w-20 rounded-md border border-stone-300 px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-950"
                         />
-                        <span v-if="Math.abs(scale - 1) > 0.001" class="text-xs text-green-700">({{ Math.round(scale * 100) / 100 }}× recipe)</span>
+                        <span v-if="Math.abs(scale - 1) > 0.001" class="text-xs text-green-700 dark:text-green-400">({{ Math.round(scale * 100) / 100 }}× recipe)</span>
                     </label>
 
                     <IngredientList class="mt-3" :ingredients="recipe.ingredients" :scale="scale" />
                 </div>
             </aside>
 
-            <article class="prose prose-stone max-w-none prose-headings:font-semibold" v-html="recipe.body_html" />
+            <article class="prose prose-stone max-w-none prose-headings:font-semibold dark:prose-invert" v-html="recipe.body_html" />
         </div>
     </AppLayout>
 </template>

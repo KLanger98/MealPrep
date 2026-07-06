@@ -45,25 +45,25 @@ const hasFilters = () => Object.values(state).some((v) => v !== '');
             v-model="state.q"
             type="search"
             placeholder="Search recipes or ingredients…"
-            class="w-64 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            class="w-64 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-stone-700 dark:bg-stone-900"
         />
-        <select v-model="state.type" class="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm capitalize">
+        <select v-model="state.type" class="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm capitalize dark:border-stone-700 dark:bg-stone-900">
             <option value="">All types</option>
             <option v-for="type in options.types" :key="type" :value="type">{{ type }}</option>
         </select>
-        <select v-model="state.protein" class="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm capitalize">
+        <select v-model="state.protein" class="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm capitalize dark:border-stone-700 dark:bg-stone-900">
             <option value="">All proteins</option>
             <option v-for="protein in options.proteins" :key="protein" :value="protein">{{ protein }}</option>
         </select>
-        <select v-model="state.cost" class="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm">
+        <select v-model="state.cost" class="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-900">
             <option value="">Any cost</option>
             <option v-for="cost in options.costs" :key="cost" :value="cost">{{ cost }}</option>
         </select>
-        <select v-model="state.tag" class="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm">
+        <select v-model="state.tag" class="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-900">
             <option value="">All tags</option>
             <option v-for="tag in options.tags" :key="tag" :value="tag">{{ tag }}</option>
         </select>
-        <button v-if="hasFilters()" type="button" class="text-sm text-stone-500 hover:text-stone-800" @click="clearAll">
+        <button v-if="hasFilters()" type="button" class="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200" @click="clearAll">
             Clear
         </button>
     </div>

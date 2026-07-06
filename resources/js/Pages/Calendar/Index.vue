@@ -66,35 +66,35 @@ const weekLabel = computed(() => {
         <div class="flex flex-wrap items-center justify-between gap-3">
             <h1 class="text-2xl font-semibold">Calendar</h1>
             <div class="flex items-center gap-2">
-                <span class="mr-2 text-sm text-stone-500">{{ weekLabel }}</span>
-                <button type="button" class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50" @click="goToWeek(-7)">←</button>
-                <button type="button" class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50" @click="goToToday">Today</button>
-                <button type="button" class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50" @click="goToWeek(7)">→</button>
+                <span class="mr-2 text-sm text-stone-500 dark:text-stone-400">{{ weekLabel }}</span>
+                <button type="button" class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800" @click="goToWeek(-7)">←</button>
+                <button type="button" class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800" @click="goToToday">Today</button>
+                <button type="button" class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800" @click="goToWeek(7)">→</button>
             </div>
         </div>
 
         <div class="mt-6 overflow-x-auto">
-            <div class="grid min-w-[900px] grid-cols-[70px_repeat(7,1fr)] gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200">
-                <div class="bg-stone-50 p-2"></div>
+            <div class="grid min-w-[900px] grid-cols-[70px_repeat(7,1fr)] gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
+                <div class="bg-stone-50 p-2 dark:bg-stone-900"></div>
                 <div
                     v-for="day in days"
                     :key="day.date"
-                    class="bg-stone-50 p-2 text-center"
-                    :class="{ 'bg-green-50': day.isToday }"
+                    class="bg-stone-50 p-2 text-center dark:bg-stone-900"
+                    :class="{ 'bg-green-50 dark:bg-green-950': day.isToday }"
                 >
-                    <div class="text-xs font-medium uppercase tracking-wide text-stone-500">{{ day.dayName }}</div>
-                    <div class="text-sm font-semibold" :class="day.isToday ? 'text-green-700' : 'text-stone-800'">{{ day.dayNumber }}</div>
+                    <div class="text-xs font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">{{ day.dayName }}</div>
+                    <div class="text-sm font-semibold" :class="day.isToday ? 'text-green-700 dark:text-green-400' : 'text-stone-800 dark:text-stone-200'">{{ day.dayNumber }}</div>
                 </div>
 
                 <template v-for="slot in slots" :key="slot">
-                    <div class="flex items-start bg-stone-50 p-2">
-                        <span class="text-xs font-medium uppercase tracking-wide text-stone-500">{{ slot }}</span>
+                    <div class="flex items-start bg-stone-50 p-2 dark:bg-stone-900">
+                        <span class="text-xs font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">{{ slot }}</span>
                     </div>
                     <div
                         v-for="day in days"
                         :key="slot + day.date"
-                        class="group/cell min-h-24 space-y-1.5 bg-white p-1.5"
-                        :class="{ 'bg-green-50/40': day.isToday }"
+                        class="group/cell min-h-24 space-y-1.5 bg-white p-1.5 dark:bg-stone-950"
+                        :class="{ 'bg-green-50/40 dark:bg-green-950/30': day.isToday }"
                     >
                         <AssignmentCard
                             v-for="assignment in grid[day.date]?.[slot] ?? []"
@@ -104,7 +104,7 @@ const weekLabel = computed(() => {
                         />
                         <button
                             type="button"
-                            class="w-full rounded-md border border-dashed border-stone-200 py-1 text-xs text-stone-300 opacity-0 transition-opacity hover:border-green-400 hover:text-green-600 group-hover/cell:opacity-100"
+                            class="w-full rounded-md border border-dashed border-stone-200 py-1 text-xs text-stone-300 opacity-0 transition-opacity hover:border-green-400 hover:text-green-600 group-hover/cell:opacity-100 dark:border-stone-700 dark:text-stone-600 dark:hover:border-green-500 dark:hover:text-green-400"
                             @click="openAdd(day.date, slot)"
                         >
                             + Add

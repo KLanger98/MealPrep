@@ -34,7 +34,7 @@ defineProps({
             <RecipeCard v-for="recipe in recipes" :key="recipe.slug" :recipe="recipe" />
         </div>
 
-        <div v-else class="mt-16 text-center text-stone-500">
+        <div v-else class="mt-16 text-center text-stone-500 dark:text-stone-400">
             <p class="text-lg font-medium">No recipes found</p>
             <p class="mt-1 text-sm">
                 Drop a <span class="font-mono">.md</span> file into the <span class="font-mono">recipes/</span> folder

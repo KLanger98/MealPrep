@@ -68,20 +68,20 @@ function sourcesLabel(item) {
     <AppLayout>
         <Head :title="list.name || list.label" />
 
-        <Link :href="route('shopping-lists.index')" class="text-sm text-stone-500 hover:text-stone-800">← All lists</Link>
+        <Link :href="route('shopping-lists.index')" class="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200">← All lists</Link>
 
         <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold">{{ list.name || list.label }}</h1>
-                <p v-if="list.name" class="text-sm text-stone-500">{{ list.label }}</p>
+                <p v-if="list.name" class="text-sm text-stone-500 dark:text-stone-400">{{ list.label }}</p>
             </div>
             <div class="flex items-center gap-3">
-                <span class="text-sm text-stone-500">{{ checkedCount }}/{{ list.items.length }} ticked</span>
-                <div class="flex rounded-lg border border-stone-300 bg-white p-0.5 text-sm">
+                <span class="text-sm text-stone-500 dark:text-stone-400">{{ checkedCount }}/{{ list.items.length }} ticked</span>
+                <div class="flex rounded-lg border border-stone-300 bg-white p-0.5 text-sm dark:border-stone-700 dark:bg-stone-900">
                     <button
                         type="button"
                         class="rounded-md px-3 py-1"
-                        :class="viewMode === 'aisle' ? 'bg-green-600 text-white' : 'text-stone-600 hover:bg-stone-100'"
+                        :class="viewMode === 'aisle' ? 'bg-green-600 text-white' : 'text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800'"
                         @click="viewMode = 'aisle'"
                     >
                         By aisle
@@ -89,7 +89,7 @@ function sourcesLabel(item) {
                     <button
                         type="button"
                         class="rounded-md px-3 py-1"
-                        :class="viewMode === 'recipe' ? 'bg-green-600 text-white' : 'text-stone-600 hover:bg-stone-100'"
+                        :class="viewMode === 'recipe' ? 'bg-green-600 text-white' : 'text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800'"
                         @click="viewMode = 'recipe'"
                     >
                         By recipe
@@ -97,7 +97,7 @@ function sourcesLabel(item) {
                 </div>
                 <button
                     type="button"
-                    class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50"
+                    class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
                     title="Rebuild from the calendar (keeps ticked items ticked)"
                     @click="regenerate"
                 >
@@ -108,24 +108,24 @@ function sourcesLabel(item) {
 
         <div v-if="viewMode === 'recipe' && recipeGroups.length" class="mt-6 space-y-6">
             <section v-for="group in recipeGroups" :key="group.recipe">
-                <h2 class="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                <h2 class="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">
                     {{ group.recipe }}
-                    <span v-if="group.scale !== 1" class="ml-1 normal-case text-green-700">×{{ group.scale }}</span>
+                    <span v-if="group.scale !== 1" class="ml-1 normal-case text-green-700 dark:text-green-400">×{{ group.scale }}</span>
                 </h2>
-                <ul class="mt-2 divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white">
+                <ul class="mt-2 divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
                     <li v-for="{ item, source } in group.entries" :key="item.id">
                         <label class="flex cursor-pointer items-baseline gap-3 px-4 py-2.5">
                             <input
                                 type="checkbox"
                                 :checked="item.checked"
-                                class="size-4 translate-y-0.5 rounded border-stone-300 text-green-600 focus:ring-green-500"
+                                class="size-4 translate-y-0.5 rounded border-stone-300 text-green-600 focus:ring-green-500 dark:border-stone-600 dark:bg-stone-800"
                                 @change="toggle(item)"
                             />
-                            <span :class="{ 'text-stone-400 line-through': item.checked }">
+                            <span :class="{ 'text-stone-400 line-through dark:text-stone-500': item.checked }">
                                 <span v-if="sourceAmount(source)" class="font-medium tabular-nums">{{ sourceAmount(source) }}</span>
                                 {{ item.name }}
                             </span>
-                            <span v-if="item.sources.length > 1" class="ml-auto shrink-0 text-xs text-stone-400">
+                            <span v-if="item.sources.length > 1" class="ml-auto shrink-0 text-xs text-stone-400 dark:text-stone-500">
                                 {{ item.quantity !== null ? `${formatAmount(item.quantity, item.unit)} total` : 'also elsewhere' }}
                             </span>
                         </label>
@@ -136,21 +136,21 @@ function sourcesLabel(item) {
 
         <div v-else-if="groups.length" class="mt-6 space-y-6">
             <section v-for="group in groups" :key="group.category">
-                <h2 class="text-xs font-semibold uppercase tracking-wide text-stone-400">{{ group.category }}</h2>
-                <ul class="mt-2 divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white">
+                <h2 class="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">{{ group.category }}</h2>
+                <ul class="mt-2 divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
                     <li v-for="item in group.items" :key="item.id">
                         <label class="flex cursor-pointer items-baseline gap-3 px-4 py-2.5" :title="sourcesLabel(item)">
                             <input
                                 type="checkbox"
                                 :checked="item.checked"
-                                class="size-4 translate-y-0.5 rounded border-stone-300 text-green-600 focus:ring-green-500"
+                                class="size-4 translate-y-0.5 rounded border-stone-300 text-green-600 focus:ring-green-500 dark:border-stone-600 dark:bg-stone-800"
                                 @change="toggle(item)"
                             />
-                            <span :class="{ 'text-stone-400 line-through': item.checked }">
+                            <span :class="{ 'text-stone-400 line-through dark:text-stone-500': item.checked }">
                                 <span v-if="item.quantity !== null" class="font-medium tabular-nums">{{ formatAmount(item.quantity, item.unit) }}</span>
                                 {{ item.name }}
                             </span>
-                            <span v-if="item.sources.length > 1" class="ml-auto shrink-0 text-xs text-stone-400" :title="sourcesLabel(item)">
+                            <span v-if="item.sources.length > 1" class="ml-auto shrink-0 text-xs text-stone-400 dark:text-stone-500" :title="sourcesLabel(item)">
                                 {{ item.sources.length }} recipes
                             </span>
                         </label>
@@ -159,7 +159,7 @@ function sourcesLabel(item) {
             </section>
         </div>
 
-        <p v-else class="mt-10 text-center text-stone-500">
+        <p v-else class="mt-10 text-center text-stone-500 dark:text-stone-400">
             Nothing to buy — no recipes are scheduled on the calendar in this date range.
         </p>
     </AppLayout>

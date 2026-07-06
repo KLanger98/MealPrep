@@ -32,18 +32,18 @@ function destroyList(list) {
 
         <h1 class="text-2xl font-semibold">Shopping Lists</h1>
 
-        <form class="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4" @submit.prevent="submit">
-            <label class="text-sm font-medium text-stone-700">
+        <form class="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900" @submit.prevent="submit">
+            <label class="text-sm font-medium text-stone-700 dark:text-stone-300">
                 From
-                <input v-model="form.start_date" type="date" required class="mt-1 block rounded-lg border border-stone-300 px-2 py-1.5 text-sm" />
+                <input v-model="form.start_date" type="date" required class="mt-1 block rounded-lg border border-stone-300 px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-950" />
             </label>
-            <label class="text-sm font-medium text-stone-700">
+            <label class="text-sm font-medium text-stone-700 dark:text-stone-300">
                 To
-                <input v-model="form.end_date" type="date" required :min="form.start_date" class="mt-1 block rounded-lg border border-stone-300 px-2 py-1.5 text-sm" />
+                <input v-model="form.end_date" type="date" required :min="form.start_date" class="mt-1 block rounded-lg border border-stone-300 px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-950" />
             </label>
-            <label class="flex-1 text-sm font-medium text-stone-700">
-                Name <span class="font-normal text-stone-400">(optional)</span>
-                <input v-model="form.name" type="text" placeholder="e.g. Week 28 shop" class="mt-1 block w-full rounded-lg border border-stone-300 px-2 py-1.5 text-sm" />
+            <label class="flex-1 text-sm font-medium text-stone-700 dark:text-stone-300">
+                Name <span class="font-normal text-stone-400 dark:text-stone-500">(optional)</span>
+                <input v-model="form.name" type="text" placeholder="e.g. Week 28 shop" class="mt-1 block w-full rounded-lg border border-stone-300 px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-950" />
             </label>
             <button
                 type="submit"
@@ -54,7 +54,7 @@ function destroyList(list) {
             </button>
             <p v-if="form.errors.end_date" class="w-full text-sm text-red-600">{{ form.errors.end_date }}</p>
         </form>
-        <p class="mt-2 text-xs text-stone-500">
+        <p class="mt-2 text-xs text-stone-500 dark:text-stone-400">
             Gathers ingredients from every recipe on the calendar in that range. A batch that overlaps the range is included in full (you cook the whole batch).
         </p>
 
@@ -62,17 +62,17 @@ function destroyList(list) {
             <div
                 v-for="list in lists"
                 :key="list.id"
-                class="flex items-center justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3"
+                class="flex items-center justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3 dark:border-stone-800 dark:bg-stone-900"
             >
                 <Link :href="route('shopping-lists.show', list.id)" class="flex-1">
-                    <span class="font-medium text-stone-800 hover:text-green-700">{{ list.name || list.label }}</span>
-                    <span v-if="list.name" class="ml-2 text-sm text-stone-500">{{ list.label }}</span>
+                    <span class="font-medium text-stone-800 hover:text-green-700 dark:text-stone-200 dark:hover:text-green-400">{{ list.name || list.label }}</span>
+                    <span v-if="list.name" class="ml-2 text-sm text-stone-500 dark:text-stone-400">{{ list.label }}</span>
                 </Link>
-                <span class="text-sm text-stone-500">{{ list.checked_items_count }}/{{ list.items_count }} ticked</span>
-                <button type="button" class="text-sm text-stone-400 hover:text-red-600" @click="destroyList(list)">Delete</button>
+                <span class="text-sm text-stone-500 dark:text-stone-400">{{ list.checked_items_count }}/{{ list.items_count }} ticked</span>
+                <button type="button" class="text-sm text-stone-400 hover:text-red-600 dark:text-stone-500 dark:hover:text-red-400" @click="destroyList(list)">Delete</button>
             </div>
         </div>
 
-        <p v-else class="mt-10 text-center text-stone-500">No lists yet — pick a date range above and generate one.</p>
+        <p v-else class="mt-10 text-center text-stone-500 dark:text-stone-400">No lists yet — pick a date range above and generate one.</p>
     </AppLayout>
 </template>

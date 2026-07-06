@@ -16,10 +16,10 @@ const form = useForm({
     <AppLayout>
         <Head title="New recipe" />
 
-        <Link :href="route('recipes.index')" class="text-sm text-stone-500 hover:text-stone-800">← All recipes</Link>
+        <Link :href="route('recipes.index')" class="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200">← All recipes</Link>
 
         <h1 class="mt-2 text-2xl font-semibold">New recipe</h1>
-        <p class="mt-1 text-sm text-stone-500">
+        <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">
             This creates a <span class="font-mono">.md</span> file in your recipes folder — the same thing an AI (or you, in a text editor) would write.
         </p>
 

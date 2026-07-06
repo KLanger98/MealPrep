@@ -17,10 +17,10 @@ const form = useForm({
     <AppLayout>
         <Head :title="`Edit — ${recipe.title}`" />
 
-        <Link :href="route('recipes.show', recipe.slug)" class="text-sm text-stone-500 hover:text-stone-800">← {{ recipe.title }}</Link>
+        <Link :href="route('recipes.show', recipe.slug)" class="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200">← {{ recipe.title }}</Link>
 
         <h1 class="mt-2 text-2xl font-semibold">Edit {{ recipe.title }}</h1>
-        <p class="mt-1 truncate text-sm text-stone-500" :title="recipe.file_path">
+        <p class="mt-1 truncate text-sm text-stone-500 dark:text-stone-400" :title="recipe.file_path">
             Editing <span class="font-mono">{{ recipe.file_path }}</span>
         </p>
 
