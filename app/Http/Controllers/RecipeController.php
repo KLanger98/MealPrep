@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RecipeController extends Controller
 {
@@ -32,6 +33,7 @@ class RecipeController extends Controller
                 'servings' => $recipe->servings,
                 'tags' => $recipe->tags,
                 'total_minutes' => ($recipe->prep_minutes ?? 0) + ($recipe->cook_minutes ?? 0) ?: null,
+                'image_url' => $recipe->imageUrl(),
             ]);
 
         $available = Recipe::available();
@@ -68,7 +70,19 @@ class RecipeController extends Controller
                 ]),
                 'missing' => $recipe->missing_at !== null,
                 'file_path' => $recipe->file_path,
+                'image_url' => $recipe->imageUrl(),
             ],
+        ]);
+    }
+
+    public function image(Recipe $recipe): BinaryFileResponse
+    {
+        $path = $recipe->imagePath();
+
+        abort_if($path === null, 404);
+
+        return response()->file($path, [
+            'Cache-Control' => 'public, max-age=31536000, immutable',
         ]);
     }
 }

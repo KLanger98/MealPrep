@@ -31,6 +31,13 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
             The file for this recipe (<span class="font-mono">{{ recipe.file_path }}</span>) is missing. Showing the last indexed version.
         </div>
 
+        <img
+            v-if="recipe.image_url"
+            :src="recipe.image_url"
+            :alt="recipe.title"
+            class="mt-4 max-h-80 w-full rounded-xl object-cover"
+        />
+
         <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-semibold">{{ recipe.title }}</h1>

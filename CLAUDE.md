@@ -11,7 +11,8 @@ When asked to create or edit a recipe, follow `recipes/SCHEMA.md` exactly and
 save the file as `recipes/<slug>.md`. Key rules: `title` and `ingredients` are
 required; keep ingredient names consistent across recipes (shopping lists
 merge by exact name); prefer grams over cups; omit `quantity` for "to taste"
-items.
+items. Recipe photos: save an image with the same basename next to the .md
+file (`beef-chilli.md` + `beef-chilli.jpg`) — no frontmatter needed.
 
 ## Development
 

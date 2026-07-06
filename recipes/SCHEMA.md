@@ -63,6 +63,7 @@ Keeps 4 days refrigerated.
 | `prep_minutes` | optional | Integer, hands-on time. |
 | `cook_minutes` | optional | Integer, cooking time. |
 | `tags` | optional | YAML list of freeform tags, e.g. `[meal-prep-friendly, freezes-well, spicy]`. |
+| `image` | optional | Path to a photo, relative to this recipe file, e.g. `images/beef-chilli.jpg`. Usually unnecessary — see below. |
 | `ingredients` | **yes** | List of ingredient maps — see below. |
 
 Unknown extra fields are kept but ignored, so a typo like `preptime` won't
@@ -91,6 +92,17 @@ Prefer weight (`g`) over volume for anything you'd weigh. `g`/`kg` and
 `ml`/`l` merge automatically on shopping lists; other unit pairs (e.g. `cup`
 vs `g` of rice) will appear as separate lines, so keep the same ingredient in
 the same unit across recipes where you can.
+
+## Images
+
+The easiest way to give a recipe a photo needs no frontmatter at all: save an
+image with the **same basename as the recipe file**, in the same folder —
+`beef-chilli.md` + `beef-chilli.jpg`. Supported: `.jpg`, `.jpeg`, `.png`,
+`.webp`, `.gif` (checked in that order).
+
+Use the `image:` frontmatter field only when the file can't sit alongside
+with a matching name (e.g. a shared `images/` subfolder). The path is
+relative to the recipe file and must stay inside the recipes folder.
 
 ## Markdown body
 

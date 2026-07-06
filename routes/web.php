@@ -11,6 +11,7 @@ Route::redirect('/', '/recipes');
 
 Route::get('/recipes', [RecipeController::class, 'index'])->name('recipes.index');
 Route::get('/recipes/{recipe:slug}', [RecipeController::class, 'show'])->name('recipes.show');
+Route::get('/recipes/{recipe:slug}/image', [RecipeController::class, 'image'])->name('recipes.image');
 
 Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
 

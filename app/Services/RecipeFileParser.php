@@ -16,7 +16,7 @@ class RecipeFileParser
      */
     private const KNOWN_KEYS = [
         'title', 'slug', 'type', 'servings', 'protein', 'cost',
-        'prep_minutes', 'cook_minutes', 'tags', 'ingredients',
+        'prep_minutes', 'cook_minutes', 'tags', 'ingredients', 'image',
     ];
 
     /**
@@ -90,6 +90,7 @@ class RecipeFileParser
                 'servings' => $servings,
                 'tags' => $tags,
                 'ingredients' => $ingredients,
+                'image' => $this->stringOrNull($matter['image'] ?? null, lowercase: false),
                 'body_markdown' => trim($document->body()),
                 'meta' => $meta === [] ? null : $meta,
             ],
