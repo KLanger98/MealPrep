@@ -10,7 +10,12 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', '/recipes');
 
 Route::get('/recipes', [RecipeController::class, 'index'])->name('recipes.index');
+Route::get('/recipes/create', [RecipeController::class, 'create'])->name('recipes.create');
+Route::post('/recipes', [RecipeController::class, 'store'])->name('recipes.store');
 Route::get('/recipes/{recipe:slug}', [RecipeController::class, 'show'])->name('recipes.show');
+Route::get('/recipes/{recipe:slug}/edit', [RecipeController::class, 'edit'])->name('recipes.edit');
+Route::put('/recipes/{recipe:slug}', [RecipeController::class, 'update'])->name('recipes.update');
+Route::delete('/recipes/{recipe:slug}', [RecipeController::class, 'destroy'])->name('recipes.destroy');
 Route::get('/recipes/{recipe:slug}/image', [RecipeController::class, 'image'])->name('recipes.image');
 
 Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');

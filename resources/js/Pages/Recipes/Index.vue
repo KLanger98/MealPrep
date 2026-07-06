@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import FilterBar from '@/Components/FilterBar.vue';
 import RecipeCard from '@/Components/RecipeCard.vue';
 import SyncErrorBanner from '@/Components/SyncErrorBanner.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
     recipes: { type: Array, required: true },
@@ -18,7 +18,15 @@ defineProps({
         <SyncErrorBanner />
 
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <h1 class="text-2xl font-semibold">Recipes</h1>
+            <div class="flex items-center gap-3">
+                <h1 class="text-2xl font-semibold">Recipes</h1>
+                <Link
+                    :href="route('recipes.create')"
+                    class="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
+                >
+                    + New recipe
+                </Link>
+            </div>
             <FilterBar :filters="filters" :options="filterOptions" />
         </div>
 

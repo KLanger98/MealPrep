@@ -4,7 +4,7 @@ slug: red-lentil-soup
 type: dinner
 servings: 4
 protein: legumes
-cost: low
+cost: medium
 prep_minutes: 10
 cook_minutes: 30
 tags: [meal-prep-friendly, freezes-well, vegetarian]

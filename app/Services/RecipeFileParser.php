@@ -34,6 +34,19 @@ class RecipeFileParser
             throw new RecipeParseException("Could not read file: {$path}");
         }
 
+        return $this->parseString($contents, pathinfo($path, PATHINFO_FILENAME));
+    }
+
+    /**
+     * Parse raw recipe markdown (e.g. from the in-app editor) without
+     * touching the filesystem.
+     *
+     * @return array{data: array<string, mixed>, warnings: string[]}
+     *
+     * @throws RecipeParseException
+     */
+    public function parseString(string $contents, string $fallbackSlugSource = ''): array
+    {
         try {
             $document = YamlFrontMatter::parse($contents);
             $matter = $document->matter();
@@ -56,8 +69,8 @@ class RecipeFileParser
         $slug = Str::slug((string) ($matter['slug'] ?? ''));
 
         if ($slug === '') {
-            $slug = Str::slug(pathinfo($path, PATHINFO_FILENAME));
-            $warnings[] = "No slug in frontmatter; using filename-derived slug \"{$slug}\".";
+            $slug = Str::slug($fallbackSlugSource) ?: Str::slug($title);
+            $warnings[] = "No slug in frontmatter; using derived slug \"{$slug}\".";
         }
 
         $servings = filter_var($matter['servings'] ?? null, FILTER_VALIDATE_INT);

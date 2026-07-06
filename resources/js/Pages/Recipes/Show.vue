@@ -1,12 +1,18 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import IngredientList from '@/Components/IngredientList.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
     recipe: { type: Object, required: true },
 });
+
+function destroyRecipe() {
+    if (confirm(`Delete "${props.recipe.title}"? This deletes the .md file and removes it from any meal plans.`)) {
+        router.delete(route('recipes.destroy', props.recipe.slug));
+    }
+}
 
 // Display-only scaling: nothing here is persisted.
 const targetServings = ref(props.recipe.servings);
@@ -51,6 +57,22 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
                     <span v-if="recipe.prep_minutes">Prep {{ recipe.prep_minutes }} min</span>
                     <span v-if="recipe.cook_minutes">Cook {{ recipe.cook_minutes }} min</span>
                 </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <Link
+                    v-if="!recipe.missing"
+                    :href="route('recipes.edit', recipe.slug)"
+                    class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50"
+                >
+                    Edit
+                </Link>
+                <button
+                    type="button"
+                    class="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                    @click="destroyRecipe"
+                >
+                    Delete
+                </button>
             </div>
         </div>
 
