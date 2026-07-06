@@ -22,6 +22,34 @@ function setRating(value) {
     router.patch(route('recipes.rate', props.recipe.slug), { rating }, { preserveScroll: true });
 }
 
+const photoInput = ref(null);
+const photoError = ref(null);
+const uploadingPhoto = ref(false);
+
+function uploadPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    photoError.value = null;
+    uploadingPhoto.value = true;
+
+    router.post(route('recipes.image.store', props.recipe.slug), { photo: file }, {
+        forceFormData: true,
+        preserveScroll: true,
+        onError: (errors) => (photoError.value = errors.photo),
+        onFinish: () => {
+            uploadingPhoto.value = false;
+            event.target.value = '';
+        },
+    });
+}
+
+function removePhoto() {
+    if (confirm('Remove this photo? The image file will be deleted from the recipes folder.')) {
+        router.delete(route('recipes.image.destroy', props.recipe.slug), { preserveScroll: true });
+    }
+}
+
 const sourceIsUrl = computed(() => /^https?:\/\//i.test(props.recipe.source ?? ''));
 
 const sourceLabel = computed(() => {
@@ -56,12 +84,44 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
             The file for this recipe (<span class="font-mono">{{ recipe.file_path }}</span>) is missing. Showing the last indexed version.
         </div>
 
-        <img
-            v-if="recipe.image_url"
-            :src="recipe.image_url"
-            :alt="recipe.title"
-            class="mt-4 max-h-80 w-full rounded-xl object-cover"
-        />
+        <div class="group/photo relative mt-4">
+            <img
+                v-if="recipe.image_url"
+                :src="recipe.image_url"
+                :alt="recipe.title"
+                class="max-h-80 w-full rounded-xl object-cover"
+            />
+            <div
+                class="flex gap-2"
+                :class="recipe.image_url ? 'absolute bottom-3 right-3' : ''"
+            >
+                <button
+                    type="button"
+                    class="rounded-lg px-3 py-1.5 text-sm shadow-sm"
+                    :class="recipe.image_url ? 'bg-white/90 text-stone-700 hover:bg-white' : 'border border-dashed border-stone-300 text-stone-500 hover:border-green-400 hover:text-green-700'"
+                    :disabled="uploadingPhoto"
+                    @click="photoInput.click()"
+                >
+                    {{ uploadingPhoto ? 'Uploading…' : recipe.image_url ? 'Change photo' : '+ Add photo' }}
+                </button>
+                <button
+                    v-if="recipe.image_url"
+                    type="button"
+                    class="rounded-lg bg-white/90 px-3 py-1.5 text-sm text-red-600 shadow-sm hover:bg-white"
+                    @click="removePhoto"
+                >
+                    Remove
+                </button>
+            </div>
+            <input
+                ref="photoInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                class="hidden"
+                @change="uploadPhoto"
+            />
+        </div>
+        <p v-if="photoError" class="mt-2 text-sm text-red-600">{{ photoError }}</p>
 
         <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
             <div>

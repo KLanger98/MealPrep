@@ -17,6 +17,8 @@ Route::get('/recipes/{recipe:slug}/edit', [RecipeController::class, 'edit'])->na
 Route::put('/recipes/{recipe:slug}', [RecipeController::class, 'update'])->name('recipes.update');
 Route::delete('/recipes/{recipe:slug}', [RecipeController::class, 'destroy'])->name('recipes.destroy');
 Route::get('/recipes/{recipe:slug}/image', [RecipeController::class, 'image'])->name('recipes.image');
+Route::post('/recipes/{recipe:slug}/image', [RecipeController::class, 'storeImage'])->name('recipes.image.store');
+Route::delete('/recipes/{recipe:slug}/image', [RecipeController::class, 'destroyImage'])->name('recipes.image.destroy');
 Route::patch('/recipes/{recipe:slug}/rating', [RecipeController::class, 'rate'])->name('recipes.rate');
 
 Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');

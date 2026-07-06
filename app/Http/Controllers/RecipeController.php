@@ -235,6 +235,119 @@ class RecipeController extends Controller
         return back();
     }
 
+    /**
+     * Upload (or replace) the recipe photo. The file is stored next to the
+     * .md with the same basename — the sibling convention — so the recipes
+     * folder stays self-contained and portable.
+     */
+    public function storeImage(Request $request, Recipe $recipe, RecipeSyncer $syncer): RedirectResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpeg,jpg,png,webp,gif', 'max:15360'],
+        ]);
+
+        $photo = $request->file('photo');
+
+        foreach ($recipe->siblingImagePaths() as $existing) {
+            unlink($existing);
+        }
+
+        $extension = strtolower($photo->getClientOriginalExtension()) ?: $photo->extension();
+        $basename = pathinfo($recipe->file_path, PATHINFO_FILENAME);
+        $directory = dirname($recipe->file_path);
+
+        $photo->move($directory, $basename.'.'.$extension);
+        $this->normalizePhoto($directory.DIRECTORY_SEPARATOR.$basename.'.'.$extension);
+
+        // A frontmatter image: path would shadow the upload — drop it.
+        $this->removeFrontmatterKey($recipe, 'image');
+        $syncer->sync();
+
+        return back();
+    }
+
+    public function destroyImage(Recipe $recipe, RecipeSyncer $syncer): RedirectResponse
+    {
+        foreach ($recipe->siblingImagePaths() as $existing) {
+            unlink($existing);
+        }
+
+        $this->removeFrontmatterKey($recipe, 'image');
+        $syncer->sync();
+
+        return back();
+    }
+
+    /**
+     * Phone photos are huge and often carry an EXIF rotation: bake the
+     * orientation in and cap the longest edge at 1600px. Non-JPEG/PNG files
+     * are left untouched.
+     */
+    private function normalizePhoto(string $path): void
+    {
+        $info = @getimagesize($path);
+
+        if ($info === false || ! in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) {
+            return;
+        }
+
+        $image = $info[2] === IMAGETYPE_JPEG ? @imagecreatefromjpeg($path) : @imagecreatefrompng($path);
+
+        if ($image === false) {
+            return;
+        }
+
+        if ($info[2] === IMAGETYPE_JPEG && function_exists('exif_read_data')) {
+            $orientation = @exif_read_data($path)['Orientation'] ?? 1;
+            $image = match ($orientation) {
+                3 => imagerotate($image, 180, 0),
+                6 => imagerotate($image, -90, 0),
+                8 => imagerotate($image, 90, 0),
+                default => $image,
+            };
+        }
+
+        $max = 1600;
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        if (max($width, $height) > $max) {
+            $scale = $max / max($width, $height);
+            $image = imagescale($image, (int) round($width * $scale), (int) round($height * $scale));
+        }
+
+        if ($info[2] === IMAGETYPE_JPEG) {
+            imagejpeg($image, $path, 82);
+        } else {
+            imagepng($image, $path);
+        }
+    }
+
+    /**
+     * Remove a top-level key's line from the file's frontmatter block.
+     */
+    private function removeFrontmatterKey(Recipe $recipe, string $key): void
+    {
+        $contents = @file_get_contents($recipe->file_path);
+
+        if ($contents === false || ! preg_match('/\A(---\R)(.*?)(\R---)/s', $contents, $m, PREG_OFFSET_CAPTURE)) {
+            return;
+        }
+
+        $front = $m[2][0];
+
+        $lines = array_values(array_filter(
+            preg_split('/\R/', $front),
+            fn (string $line) => ! str_starts_with($line, $key.':'),
+        ));
+
+        $newFront = implode("\n", $lines);
+
+        if ($newFront !== $front) {
+            file_put_contents($recipe->file_path, substr_replace($contents, $newFront, $m[2][1], strlen($front)));
+        }
+    }
+
     private function validatedContent(Request $request): string
     {
         return $request->validate([

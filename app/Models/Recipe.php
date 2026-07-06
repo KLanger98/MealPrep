@@ -38,7 +38,22 @@ class Recipe extends Model
      * Extensions tried for the sibling-file convention (beef-chilli.md next
      * to beef-chilli.jpg), in priority order.
      */
-    private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    public const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+    /**
+     * Every existing sibling image file (same basename as the .md).
+     *
+     * @return string[]
+     */
+    public function siblingImagePaths(): array
+    {
+        $base = dirname($this->file_path).DIRECTORY_SEPARATOR.pathinfo($this->file_path, PATHINFO_FILENAME);
+
+        return array_values(array_filter(
+            array_map(fn (string $ext) => $base.'.'.$ext, self::IMAGE_EXTENSIONS),
+            'is_file',
+        ));
+    }
 
     /**
      * Absolute path to this recipe's image, or null. Resolved live from the
