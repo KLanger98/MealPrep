@@ -16,6 +16,7 @@ class Recipe extends Model
             'tags' => 'array',
             'ingredients' => 'array',
             'meta' => 'array',
+            'rating' => 'float',
             'missing_at' => 'datetime',
         ];
     }

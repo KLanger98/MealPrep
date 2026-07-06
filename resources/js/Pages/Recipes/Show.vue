@@ -14,6 +14,25 @@ function destroyRecipe() {
     }
 }
 
+const hoverRating = ref(null);
+
+function setRating(value) {
+    // Clicking the current rating clears it.
+    const rating = value === props.recipe.rating ? null : value;
+    router.patch(route('recipes.rate', props.recipe.slug), { rating }, { preserveScroll: true });
+}
+
+const sourceIsUrl = computed(() => /^https?:\/\//i.test(props.recipe.source ?? ''));
+
+const sourceLabel = computed(() => {
+    if (!sourceIsUrl.value) return props.recipe.source;
+    try {
+        return new URL(props.recipe.source).hostname.replace(/^www\./, '');
+    } catch {
+        return props.recipe.source;
+    }
+});
+
 // Display-only scaling: nothing here is persisted.
 const targetServings = ref(props.recipe.servings);
 const scale = computed(() => targetServings.value / props.recipe.servings);
@@ -53,9 +72,32 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
                     <span v-if="recipe.cost" class="rounded-full bg-stone-100 px-2 py-0.5 text-stone-700">{{ costLabels[recipe.cost] ?? recipe.cost }}</span>
                     <span v-for="tag in recipe.tags" :key="tag" class="rounded-full bg-stone-100 px-2 py-0.5 text-stone-500">{{ tag }}</span>
                 </div>
-                <div class="mt-2 flex gap-4 text-sm text-stone-500">
+                <div class="mt-2 flex flex-wrap gap-4 text-sm text-stone-500">
                     <span v-if="recipe.prep_minutes">Prep {{ recipe.prep_minutes }} min</span>
                     <span v-if="recipe.cook_minutes">Cook {{ recipe.cook_minutes }} min</span>
+                    <span v-if="recipe.source">
+                        Source:
+                        <a v-if="sourceIsUrl" :href="recipe.source" target="_blank" rel="noopener" class="text-green-700 underline underline-offset-2 hover:text-green-800">{{ sourceLabel }}</a>
+                        <span v-else>{{ recipe.source }}</span>
+                    </span>
+                </div>
+
+                <div class="mt-3 flex items-center gap-1" @mouseleave="hoverRating = null">
+                    <span class="mr-1 text-sm text-stone-500">Rating:</span>
+                    <button
+                        v-for="star in 10"
+                        :key="star"
+                        type="button"
+                        class="text-lg leading-none transition-colors"
+                        :class="star <= (hoverRating ?? recipe.rating ?? 0) ? 'text-amber-500' : 'text-stone-300 hover:text-amber-300'"
+                        :title="`${star}/10${star === recipe.rating ? ' (click to clear)' : ''}`"
+                        @mouseenter="hoverRating = star"
+                        @click="setRating(star)"
+                    >
+                        ★
+                    </button>
+                    <span v-if="recipe.rating !== null" class="ml-1 text-sm font-medium text-stone-700">{{ recipe.rating }}/10</span>
+                    <span v-else class="ml-1 text-sm text-stone-400">not rated</span>
                 </div>
             </div>
             <div class="flex items-center gap-2">

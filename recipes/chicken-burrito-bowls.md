@@ -5,6 +5,7 @@ type: dinner
 servings: 4
 protein: chicken
 cost: medium
+source: https://www.recipetineats.com/chicken-burrito-bowls/
 prep_minutes: 20
 cook_minutes: 35
 tags: [meal-prep-friendly]
@@ -43,6 +44,7 @@ ingredients:
   - name: salt
     note: to taste
     category: pantry
+rating: 8
 ---
 
 ## Method

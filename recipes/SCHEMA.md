@@ -60,6 +60,8 @@ Keeps 4 days refrigerated.
 | `servings` | recommended | Integer. How many servings the ingredient quantities make. Used for scaling. Defaults to 1 with a warning. |
 | `protein` | optional | Main protein, freeform but be consistent: `chicken`, `beef`, `pork`, `lamb`, `fish`, `seafood`, `eggs`, `tofu`, `legumes`, `vegetarian`. |
 | `cost` | optional | `low`, `medium`, or `high`. |
+| `source` | optional | Where the recipe came from — a URL (shown as a link) or freeform text like `Mum's recipe` or `RecipeTin Eats cookbook p. 142`. |
+| `rating` | optional | Your score out of 10 (decimals ok, e.g. `7.5`). Usually set from the app after cooking it — you don't need to include it when creating a recipe. |
 | `prep_minutes` | optional | Integer, hands-on time. |
 | `cook_minutes` | optional | Integer, cooking time. |
 | `tags` | optional | YAML list of freeform tags, e.g. `[meal-prep-friendly, freezes-well, spicy]`. |

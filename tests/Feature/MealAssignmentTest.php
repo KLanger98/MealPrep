@@ -129,6 +129,14 @@ class MealAssignmentTest extends TestCase
         $this->assertSame(['dinner'], MealAssignment::distinct()->pluck('slot')->all());
     }
 
+    public function test_calendar_week_param_selects_that_week(): void
+    {
+        // A Wednesday: the page should snap to Monday of the same week.
+        $this->get('/calendar?week=2026-07-15')
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page->where('weekStart', '2026-07-13'));
+    }
+
     public function test_calendar_page_renders_with_assignments(): void
     {
         $recipe = $this->makeRecipe();

@@ -39,7 +39,10 @@ function openEdit(assignment) {
 function goToWeek(offsetDays) {
     const date = new Date(props.weekStart + 'T00:00:00');
     date.setDate(date.getDate() + offsetDays);
-    router.get(route('calendar.index'), { week: date.toISOString().slice(0, 10) }, { preserveState: false });
+    // Format in local time — toISOString() converts to UTC, which rolls the
+    // date back a day in timezones ahead of UTC and breaks week navigation.
+    const week = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    router.get(route('calendar.index'), { week }, { preserveState: false });
 }
 
 function goToToday() {

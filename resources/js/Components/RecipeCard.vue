@@ -33,6 +33,7 @@ const costLabels = { low: '$', medium: '$$', high: '$$$' };
         <div class="mt-3 flex gap-4 text-xs text-stone-500">
             <span>{{ recipe.servings }} {{ recipe.servings === 1 ? 'serving' : 'servings' }}</span>
             <span v-if="recipe.total_minutes">{{ recipe.total_minutes }} min</span>
+            <span v-if="recipe.rating !== null" class="ml-auto font-medium text-amber-600">★ {{ recipe.rating }}/10</span>
         </div>
         </div>
     </Link>

@@ -15,8 +15,8 @@ class RecipeFileParser
      * is preserved in the meta column so unknown/experimental keys survive.
      */
     private const KNOWN_KEYS = [
-        'title', 'slug', 'type', 'servings', 'protein', 'cost',
-        'prep_minutes', 'cook_minutes', 'tags', 'ingredients', 'image',
+        'title', 'slug', 'type', 'servings', 'protein', 'cost', 'source',
+        'rating', 'prep_minutes', 'cook_minutes', 'tags', 'ingredients', 'image',
     ];
 
     /**
@@ -98,6 +98,8 @@ class RecipeFileParser
                 'type' => mb_strtolower(trim((string) ($matter['type'] ?? ''))) ?: 'other',
                 'protein' => $this->stringOrNull($matter['protein'] ?? null),
                 'cost' => $this->stringOrNull($matter['cost'] ?? null),
+                'source' => $this->stringOrNull($matter['source'] ?? null, lowercase: false),
+                'rating' => $this->ratingOrNull($matter['rating'] ?? null, $warnings),
                 'prep_minutes' => $this->minutesOrNull($matter['prep_minutes'] ?? null),
                 'cook_minutes' => $this->minutesOrNull($matter['cook_minutes'] ?? null),
                 'servings' => $servings,
@@ -171,6 +173,21 @@ class RecipeFileParser
         }
 
         return $lowercase ? mb_strtolower($value) : $value;
+    }
+
+    private function ratingOrNull(mixed $value, array &$warnings): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (! is_numeric($value) || $value < 0 || $value > 10) {
+            $warnings[] = "Invalid rating \"{$value}\" (must be 0–10); ignored.";
+
+            return null;
+        }
+
+        return round((float) $value, 1);
     }
 
     private function minutesOrNull(mixed $value): ?int

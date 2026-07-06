@@ -37,6 +37,7 @@ class RecipeController extends Controller
                 'cost' => $recipe->cost,
                 'servings' => $recipe->servings,
                 'tags' => $recipe->tags,
+                'rating' => $recipe->rating,
                 'total_minutes' => ($recipe->prep_minutes ?? 0) + ($recipe->cook_minutes ?? 0) ?: null,
                 'image_url' => $recipe->imageUrl(),
             ]);
@@ -64,6 +65,8 @@ class RecipeController extends Controller
                 'type' => $recipe->type,
                 'protein' => $recipe->protein,
                 'cost' => $recipe->cost,
+                'source' => $recipe->source,
+                'rating' => $recipe->rating,
                 'prep_minutes' => $recipe->prep_minutes,
                 'cook_minutes' => $recipe->cook_minutes,
                 'servings' => $recipe->servings,
@@ -91,6 +94,7 @@ class RecipeController extends Controller
             servings: 4
             protein:
             cost: medium
+            source:
             prep_minutes:
             cook_minutes:
             tags: []
@@ -185,6 +189,50 @@ class RecipeController extends Controller
         $recipe->delete();
 
         return redirect()->route('recipes.index');
+    }
+
+    /**
+     * Set or clear the rating by rewriting just the `rating:` line in the
+     * file's frontmatter — the file stays the source of truth.
+     */
+    public function rate(Request $request, Recipe $recipe, RecipeSyncer $syncer): RedirectResponse
+    {
+        $validated = $request->validate([
+            'rating' => ['nullable', 'numeric', 'min:0', 'max:10'],
+        ]);
+
+        $rating = isset($validated['rating']) ? round((float) $validated['rating'], 1) : null;
+
+        $contents = @file_get_contents($recipe->file_path);
+
+        if ($contents === false) {
+            throw ValidationException::withMessages([
+                'rating' => 'The recipe file is missing — restore it before rating.',
+            ]);
+        }
+
+        if (! preg_match('/\A(---\R)(.*?)(\R---)/s', $contents, $m, PREG_OFFSET_CAPTURE)) {
+            throw ValidationException::withMessages([
+                'rating' => 'Could not find the frontmatter block in the recipe file.',
+            ]);
+        }
+
+        $front = $m[2][0];
+
+        $lines = array_values(array_filter(
+            preg_split('/\R/', $front),
+            fn (string $line) => ! str_starts_with($line, 'rating:'),
+        ));
+
+        if ($rating !== null) {
+            $lines[] = 'rating: '.(fmod($rating, 1) === 0.0 ? (int) $rating : $rating);
+        }
+
+        $contents = substr_replace($contents, implode("\n", $lines), $m[2][1], strlen($front));
+        file_put_contents($recipe->file_path, $contents);
+        $syncer->sync();
+
+        return back();
     }
 
     private function validatedContent(Request $request): string
