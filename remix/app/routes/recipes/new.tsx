@@ -1,14 +1,10 @@
 import { env } from "cloudflare:workers";
 import { useState } from "react";
 import { data, Link, redirect, useActionData, useNavigation } from "react-router";
-import { eq } from "drizzle-orm";
 import type { Route } from "./+types/new";
-import { recipes } from "../../../database/schema";
 import { RecipeFileEditor } from "../../components/recipe-file-editor";
-import { MAX_RECIPE_FILE_CHARS, RECIPES_PREFIX } from "../../lib/config";
 import { getDb } from "../../lib/db";
-import { parseRecipe, RecipeParseError } from "../../lib/recipe-parser";
-import { syncOne } from "../../lib/recipe-syncer";
+import { createRecipe } from "../../lib/recipe-creator";
 
 const TEMPLATE = `---
 title:
@@ -41,49 +37,20 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const db = getDb(env.DB);
   const form = await request.formData();
   const content = form.get("content");
 
-  if (typeof content !== "string" || content.length === 0) {
+  if (typeof content !== "string") {
     return data({ errors: { content: "The recipe file can't be empty." } }, 422);
   }
-  if (content.length > MAX_RECIPE_FILE_CHARS) {
-    return data({ errors: { content: "The recipe file is too large." } }, 422);
+
+  const result = await createRecipe(getDb(env.DB), env.RECIPES, content);
+
+  if (!result.ok) {
+    return data({ errors: { content: result.error } }, 422);
   }
 
-  let parsed;
-  try {
-    parsed = parseRecipe(content);
-  } catch (e) {
-    if (e instanceof RecipeParseError) {
-      return data({ errors: { content: e.message } }, 422);
-    }
-    throw e;
-  }
-
-  const slug = parsed.data.slug;
-  const key = `${RECIPES_PREFIX}${slug}.md`;
-
-  const existing = await db
-    .select({ id: recipes.id })
-    .from(recipes)
-    .where(eq(recipes.slug, slug))
-    .limit(1);
-
-  if (existing.length > 0 || (await env.RECIPES.head(key)) !== null) {
-    return data(
-      { errors: { content: `A recipe with the slug "${slug}" already exists.` } },
-      422,
-    );
-  }
-
-  const object = await env.RECIPES.put(key, content, {
-    httpMetadata: { contentType: "text/markdown" },
-  });
-  await syncOne(db, env.RECIPES, key, content, object!.etag);
-
-  return redirect(`/recipes/${slug}`);
+  return redirect(`/recipes/${result.slug}`);
 }
 
 export default function NewRecipe() {

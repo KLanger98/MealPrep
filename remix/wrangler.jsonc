@@ -24,6 +24,12 @@
 			"bucket_name": "meal-prep-recipes"
 		}
 	],
+	// MCP server (Streamable HTTP) served from a Durable Object; the endpoint
+	// is /mcp/<MCP_SECRET> (secret set via `wrangler secret put MCP_SECRET`).
+	"durable_objects": {
+		"bindings": [{ "name": "RECIPE_MCP", "class_name": "RecipeMcp" }]
+	},
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["RecipeMcp"] }],
 	"observability": {
 		"enabled": true
 	},

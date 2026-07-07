@@ -9,6 +9,12 @@ export default defineConfig({
     tailwindcss(),
     reactRouter(),
   ],
+  server: {
+    fs: {
+      // Allow the ?raw import of ../recipes/SCHEMA.md (repo root) in dev.
+      allow: [".."],
+    },
+  },
   resolve: {
     tsconfigPaths: true,
   },
