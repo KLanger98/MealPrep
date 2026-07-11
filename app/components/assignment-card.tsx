@@ -66,7 +66,7 @@ export function AssignmentCard({
         </Link>
         <button
           type="button"
-          className="hidden shrink-0 text-stone-400 hover:text-red-600 group-hover:block dark:text-stone-500 dark:hover:text-red-400"
+          className="hidden shrink-0 text-stone-400 hover:text-red-600 group-hover:block pointer-coarse:block dark:text-stone-500 dark:hover:text-red-400"
           title={assignment.batch_days > 1 ? "Remove this day only" : "Remove"}
           aria-label="Remove this day"
           onClick={removeDay}
@@ -99,7 +99,7 @@ export function AssignmentCard({
         )}
       </div>
 
-      <div className="mt-1 hidden gap-2 group-hover:flex">
+      <div className="mt-1 hidden gap-2 group-hover:flex pointer-coarse:flex">
         <button
           type="button"
           className="text-[11px] text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"

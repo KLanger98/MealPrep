@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLoaderData, useNavigate, useSearchParams } from "react-router";
 import { and, asc, eq, gte, inArray, isNull, lte, max, min, sql } from "drizzle-orm";
 import type { Route } from "./+types/calendar";
@@ -17,6 +17,7 @@ import {
   formatDayMonthYear,
   formatWeekdayDay,
   isValidDate,
+  localToday,
   startOfWeek,
   weekdayShort,
 } from "../lib/dates";
@@ -122,11 +123,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 }
 
-function localToday(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-}
-
 export default function Calendar() {
   const { weekStart, weekLabel, days, slots, assignments, recipeOptions } =
     useLoaderData<typeof loader>();
@@ -134,6 +130,7 @@ export default function Calendar() {
   const [, setSearchParams] = useSearchParams();
 
   const [modalContext, setModalContext] = useState<ModalContext | null>(null);
+  const [pickedDay, setPickedDay] = useState<string | null>(null);
 
   // date -> slot -> assignments
   const grid = new Map<string, Map<string, CalendarAssignment[]>>();
@@ -144,8 +141,23 @@ export default function Calendar() {
     bySlot.get(a.slot)!.push(a);
   }
 
-  // "Today" is the browser's date — the server only knows UTC.
-  const today = localToday();
+  // "Today" is the browser's date — the server only knows UTC, so resolving
+  // it during SSR causes a hydration mismatch whenever the two disagree.
+  // Render without a today-highlight and fill it in after mount.
+  const [today, setToday] = useState<string | null>(null);
+  useEffect(() => setToday(localToday()), []);
+
+  // The mobile agenda shows one day at a time. A picked day only counts while
+  // it's inside the loaded week, so week navigation snaps back to today (or
+  // Monday when today is outside the week).
+  const weekEnd = addDays(weekStart, 6);
+  const inWeek = (date: string) => date >= weekStart && date <= weekEnd;
+  const selectedDay =
+    pickedDay && inWeek(pickedDay)
+      ? pickedDay
+      : today && inWeek(today)
+        ? today
+        : weekStart;
 
   function goToWeek(offsetDays: number) {
     navigate(`/calendar?week=${addDays(weekStart, offsetDays)}`);
@@ -168,7 +180,7 @@ export default function Calendar() {
           <button
             type="button"
             className={navButton}
-            onClick={() => setSearchParams({ week: today })}
+            onClick={() => setSearchParams({ week: localToday() })}
           >
             Today
           </button>
@@ -178,7 +190,84 @@ export default function Calendar() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto">
+      {/* Mobile: 7-day strip + one day's agenda. */}
+      <div className="mt-4 sm:hidden">
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day) => {
+            const hasMeals = (grid.get(day.date)?.size ?? 0) > 0;
+            const selected = day.date === selectedDay;
+            return (
+              <button
+                key={day.date}
+                type="button"
+                className={`relative rounded-lg border py-1.5 text-center ${
+                  selected
+                    ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950"
+                    : "border-transparent bg-stone-100 dark:bg-stone-900"
+                }`}
+                onClick={() => setPickedDay(day.date)}
+              >
+                <div
+                  className={`text-[10px] font-medium uppercase tracking-wide ${
+                    selected
+                      ? "text-green-700 dark:text-green-400"
+                      : "text-stone-400 dark:text-stone-500"
+                  }`}
+                >
+                  {day.dayName}
+                </div>
+                <div
+                  className={`text-sm font-semibold ${
+                    selected
+                      ? "text-green-700 dark:text-green-400"
+                      : day.date === today
+                        ? "text-green-700 dark:text-green-400"
+                        : "text-stone-700 dark:text-stone-300"
+                  }`}
+                >
+                  {dayNumber(day.date)}
+                </div>
+                {hasMeals && !selected && (
+                  <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-stone-400 dark:bg-stone-600" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 space-y-4">
+          {slots.map((slot) => {
+            const meals = grid.get(selectedDay)?.get(slot) ?? [];
+            return (
+              <div key={slot}>
+                <h2 className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-500">
+                  {slot}
+                </h2>
+                <div className="space-y-1.5">
+                  {meals.map((assignment) => (
+                    <AssignmentCard
+                      key={assignment.id}
+                      assignment={assignment}
+                      onEdit={(a) => setModalContext({ assignment: a })}
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    className="w-full rounded-lg border-2 border-dashed border-stone-200 py-2 text-sm font-medium text-stone-400 hover:border-green-400 hover:text-green-600 dark:border-stone-800 dark:text-stone-500 dark:hover:border-green-600 dark:hover:text-green-400"
+                    onClick={() => setModalContext({ date: selectedDay, slot })}
+                  >
+                    <span className="text-green-600 dark:text-green-400">+</span> Add{" "}
+                    {slot}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Desktop: full-week grid. */}
+      <div className="mt-6 hidden overflow-x-auto sm:block">
         <div className="grid min-w-[900px] grid-cols-[70px_repeat(7,1fr)] gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
           <div className="bg-stone-50 p-2 dark:bg-stone-900"></div>
           {days.map((day) => (
@@ -230,7 +319,7 @@ export default function Calendar() {
                   ))}
                   <button
                     type="button"
-                    className="w-full rounded-md border border-dashed border-stone-200 py-1 text-xs text-stone-300 opacity-0 transition-opacity hover:border-green-400 hover:text-green-600 group-hover/cell:opacity-100 dark:border-stone-700 dark:text-stone-600 dark:hover:border-green-500 dark:hover:text-green-400"
+                    className="w-full rounded-md border border-dashed border-stone-200 py-1 text-xs text-stone-300 opacity-0 transition-opacity hover:border-green-400 hover:text-green-600 group-hover/cell:opacity-100 pointer-coarse:opacity-100 dark:border-stone-700 dark:text-stone-600 dark:hover:border-green-500 dark:hover:text-green-400"
                     onClick={() => setModalContext({ date: day.date, slot })}
                   >
                     + Add

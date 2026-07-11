@@ -50,17 +50,20 @@ export function FilterBar({ options }: { options: FilterOptions }) {
   }
 
   const selectClass =
-    "rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-900";
+    "shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-900";
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <input
         type="search"
         value={q}
         onChange={(e) => onSearchInput(e.target.value)}
         placeholder="Search recipes or ingredients…"
-        className="w-64 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-stone-700 dark:bg-stone-900"
+        className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 sm:w-64 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900"
       />
+      {/* On mobile the selects scroll sideways in one row; sm:contents lets
+          them rejoin the flex-wrap layout on larger screens. */}
+      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:contents">
       <select
         value={current.type}
         onChange={(e) => updateParams({ type: e.target.value })}
@@ -104,12 +107,13 @@ export function FilterBar({ options }: { options: FilterOptions }) {
       {hasFilters && (
         <button
           type="button"
-          className="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
+          className="shrink-0 text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
           onClick={clearAll}
         >
           Clear
         </button>
       )}
+      </div>
     </div>
   );
 }

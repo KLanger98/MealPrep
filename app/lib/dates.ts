@@ -7,6 +7,12 @@ export function addDays(date: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Today as the browser sees it — the server only knows UTC. */
+export function localToday(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
 export function eachDay(start: string, end: string): string[] {
   const days: string[] = [];
   for (let d = start; d <= end; d = addDays(d, 1)) {

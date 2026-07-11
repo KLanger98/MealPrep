@@ -11,8 +11,11 @@ import {
 import { eq } from "drizzle-orm";
 import type { Route } from "./+types/show";
 import { recipes } from "../../../database/schema";
+import type { RecipeOption } from "../../components/assignment-card";
+import { AssignmentModal } from "../../components/assignment-modal";
 import { IngredientList } from "../../components/ingredient-list";
 import { COST_LABELS } from "../../components/recipe-card";
+import { SLOTS } from "../../lib/config";
 import { getDb } from "../../lib/db";
 import { setFrontmatterRating } from "../../lib/frontmatter-surgery";
 import { renderMarkdown } from "../../lib/markdown";
@@ -37,6 +40,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 
   return {
     recipe: {
+      id: recipe.id,
       slug: recipe.slug,
       title: recipe.title,
       type: recipe.type,
@@ -129,6 +133,15 @@ export default function ShowRecipe() {
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
   const [resizeError, setResizeError] = useState<string | null>(null);
+  const [planning, setPlanning] = useState(false);
+
+  const recipeOption: RecipeOption = {
+    id: recipe.id,
+    slug: recipe.slug,
+    title: recipe.title,
+    servings: recipe.servings,
+    type: recipe.type,
+  };
 
   // Display-only scaling: nothing here is persisted.
   const [targetServings, setTargetServings] = useState(recipe.servings);
@@ -341,24 +354,57 @@ export default function ShowRecipe() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           {!recipe.missing && (
-            <Link
-              to={`/recipes/${recipe.slug}/edit`}
-              className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
+            <button
+              type="button"
+              className="flex items-center justify-center gap-1.5 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 sm:py-1.5"
+              onClick={() => setPlanning(true)}
             >
-              Edit
-            </Link>
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
+              </svg>
+              Add to calendar
+            </button>
           )}
-          <button
-            type="button"
-            className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-stone-700 dark:bg-stone-900 dark:text-red-400 dark:hover:bg-red-950"
-            onClick={destroyRecipe}
-          >
-            Delete
-          </button>
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            {!recipe.missing && (
+              <Link
+                to={`/recipes/${recipe.slug}/edit`}
+                className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-center text-sm hover:bg-stone-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
+              >
+                Edit
+              </Link>
+            )}
+            <button
+              type="button"
+              className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-red-600 hover:bg-red-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:text-red-400 dark:hover:bg-red-950"
+              onClick={destroyRecipe}
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
+
+      {planning && (
+        <AssignmentModal
+          recipes={[recipeOption]}
+          slots={[...SLOTS]}
+          context={{ recipe: recipeOption }}
+          onClose={() => setPlanning(false)}
+        />
+      )}
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(280px,1fr)_2fr]">
         <aside>
