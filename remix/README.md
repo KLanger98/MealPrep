@@ -7,6 +7,16 @@ D1 database indexes them and holds meal plans and shopping lists.
 
 Live at https://meal-prep.karl-w-langer.workers.dev
 
+## Auth
+
+A single-user password gate built into the Worker (`app/lib/auth.ts`):
+every page requires a session cookie signed with a key derived from the
+`APP_PASSWORD` secret; the login form sets it for 90 days per device.
+Set it with `npx wrangler secret put APP_PASSWORD`; rotating it logs out
+every device. PWA install assets and `/mcp/*` stay public (the MCP
+endpoint has its own secret path). When `APP_PASSWORD` is unset or empty
+(local dev, tests) the gate is off.
+
 ## Development
 
 Node 22 via nvm is required.

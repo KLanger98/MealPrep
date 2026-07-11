@@ -1,4 +1,5 @@
 import { createRequestHandler } from "react-router";
+import { handleLogin, requireSession } from "../app/lib/auth";
 import { RecipeMcp } from "./recipe-mcp";
 
 // Durable Object classes must be exported from the worker entry module.
@@ -27,6 +28,17 @@ export default {
         request,
       );
       return mcpHandler.fetch(rewritten, env, ctx);
+    }
+
+    // Single-user password gate (replaces Cloudflare Access). Off when the
+    // APP_PASSWORD secret isn't set, e.g. in local dev and tests.
+    if (env.APP_PASSWORD) {
+      if (url.pathname === "/login" && request.method === "POST") {
+        return handleLogin(request, env.APP_PASSWORD);
+      }
+
+      const gate = await requireSession(request, env.APP_PASSWORD);
+      if (gate) return gate;
     }
 
     return requestHandler(request);
