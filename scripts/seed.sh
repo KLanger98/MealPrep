@@ -20,7 +20,7 @@ if [[ "${1:-}" == "--remote" ]]; then
   MODE="--remote"
 fi
 
-RECIPES_DIR="../recipes"
+RECIPES_DIR="./recipes"
 BUCKET="meal-prep-recipes"
 SYNC_URL="${SYNC_URL:-http://localhost:5173}"
 

@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import { z } from "zod";
 import { asc, eq, isNull, sql } from "drizzle-orm";
-import schemaMd from "../../recipes/SCHEMA.md?raw";
+import schemaMd from "../recipes/SCHEMA.md?raw";
 import { recipes } from "../database/schema";
 import { RECIPES_PREFIX } from "../app/lib/config";
 import { getDb } from "../app/lib/db";

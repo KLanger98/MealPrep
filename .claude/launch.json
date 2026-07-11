@@ -2,15 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "meal-prep",
-      "runtimeExecutable": "php",
-      "runtimeArgs": ["artisan", "serve", "--port=8321"],
-      "port": 8321
-    },
-    {
       "name": "remix-dev",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-lc", "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && cd remix && npm run dev -- --port $PORT"],
+      "runtimeArgs": ["-lc", "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && npm run dev -- --port $PORT"],
       "autoPort": true
     }
   ]
