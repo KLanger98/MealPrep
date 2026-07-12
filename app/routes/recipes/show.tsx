@@ -143,8 +143,15 @@ export default function ShowRecipe() {
     type: recipe.type,
   };
 
-  // Display-only scaling: nothing here is persisted.
-  const [targetServings, setTargetServings] = useState(recipe.servings);
+  // Display-only scaling: nothing here is persisted. The input holds the raw
+  // string so it can be emptied mid-edit; scaling falls back to the recipe's
+  // own servings until it holds a usable number.
+  const [servingsInput, setServingsInput] = useState(String(recipe.servings));
+  const parsedServings = Number(servingsInput);
+  const targetServings =
+    servingsInput.trim() !== "" && Number.isFinite(parsedServings) && parsedServings > 0
+      ? parsedServings
+      : recipe.servings;
   const scale = targetServings / recipe.servings;
   const presets = [0.5, 1, 1.5, 2];
 
@@ -422,8 +429,8 @@ export default function ShowRecipe() {
                         : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
                     }`}
                     onClick={() =>
-                      setTargetServings(
-                        Math.round(recipe.servings * factor * 100) / 100,
+                      setServingsInput(
+                        String(Math.round(recipe.servings * factor * 100) / 100),
                       )
                     }
                   >
@@ -439,8 +446,14 @@ export default function ShowRecipe() {
                 type="number"
                 min={0}
                 step={0.5}
-                value={targetServings}
-                onChange={(e) => setTargetServings(Number(e.target.value) || recipe.servings)}
+                value={servingsInput}
+                onChange={(e) => setServingsInput(e.target.value)}
+                onBlur={() => {
+                  // Leaving the field empty or invalid restores the default.
+                  if (targetServings === recipe.servings) {
+                    setServingsInput(String(recipe.servings));
+                  }
+                }}
                 className="w-20 rounded-md border border-stone-300 px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-950"
               />
               {Math.abs(scale - 1) > 0.001 && (
