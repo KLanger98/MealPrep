@@ -9,11 +9,20 @@ import {
   useFetcher,
   useLoaderData,
   useNavigation,
+  useSubmit,
 } from "react-router";
 import { desc, eq, sql } from "drizzle-orm";
 import type { Route } from "./+types/index";
 import { shoppingListItems, shoppingLists } from "../../../database/schema";
-import { addDays, formatDayMonth, formatDayMonthYear, isValidDate, startOfWeek } from "../../lib/dates";
+import {
+  addDays,
+  formatDayMonth,
+  formatDayMonthYear,
+  isValidDate,
+  localToday,
+  nextWeekday,
+  startOfWeek,
+} from "../../lib/dates";
 import { getDb } from "../../lib/db";
 import { generate } from "../../lib/shopping-list-generator";
 
@@ -91,8 +100,20 @@ export default function ShoppingListsIndex() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const deleteFetcher = useFetcher();
+  const submit = useSubmit();
 
   const [startDate, setStartDate] = useState(defaultRange.start);
+
+  // Generate a list for the upcoming weekday (today counts) through the same
+  // day a week later. Dates come from the browser so "upcoming Friday" means
+  // the user's Friday, not the server's UTC one.
+  function quickWeek(weekday: number) {
+    const start = nextWeekday(localToday(), weekday);
+    submit(
+      { start_date: start, end_date: addDays(start, 7), name: "" },
+      { method: "post" },
+    );
+  }
 
   function destroyList(list: { id: number; label: string }) {
     if (confirm(`Delete the list for ${list.label}?`)) {
@@ -112,31 +133,34 @@ export default function ShoppingListsIndex() {
 
       <Form
         method="post"
-        className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+        className="mt-4 flex flex-col md:flex-wrap   flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
       >
-        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
-          From
-          <input
-            type="date"
-            name="start_date"
-            required
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className={inputClass}
-          />
-        </label>
-        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
-          To
-          <input
-            type="date"
-            name="end_date"
-            required
-            min={startDate}
-            defaultValue={defaultRange.end}
-            className={inputClass}
-          />
-        </label>
-        <label className="flex-1 text-sm font-medium text-stone-700 dark:text-stone-300">
+        <div className="w-full flex gap-4">
+            <label className=" text-sm font-medium text-stone-700 dark:text-stone-300 w-full">
+            From
+            <input
+                type="date"
+                name="start_date"
+                required
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className={inputClass}
+            />
+            </label>
+            <label className="text-sm font-medium text-stone-700 dark:text-stone-300 w-full">
+            To
+            <input
+                type="date"
+                name="end_date"
+                required
+                min={startDate}
+                defaultValue={defaultRange.end}
+                className={inputClass}
+            />
+            </label>
+
+        </div>
+        <label className="flex-1 text-sm font-medium text-stone-700 dark:text-stone-300 w-full">
           Name{" "}
           <span className="font-normal text-stone-400 dark:text-stone-500">
             (optional)
@@ -158,6 +182,27 @@ export default function ShoppingListsIndex() {
         {actionData?.errors?.end_date && (
           <p className="w-full text-sm text-red-600">{actionData.errors.end_date}</p>
         )}
+        <div className="flex w-full flex-wrap items-center gap-2 border-t border-stone-100 pt-3 dark:border-stone-800">
+          <span className="text-xs text-stone-500 dark:text-stone-400">
+            Quick lists:
+          </span>
+          <button
+            type="button"
+            className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 hover:border-green-400 hover:text-green-700 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-green-600 dark:hover:text-green-400"
+            disabled={navigation.state === "submitting"}
+            onClick={() => quickWeek(5)}
+          >
+            Fri → next Fri
+          </button>
+          <button
+            type="button"
+            className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 hover:border-green-400 hover:text-green-700 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-green-600 dark:hover:text-green-400"
+            disabled={navigation.state === "submitting"}
+            onClick={() => quickWeek(6)}
+          >
+            Sat → next Sat
+          </button>
+        </div>
       </Form>
       <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
         Gathers ingredients from every recipe on the calendar in that range. A

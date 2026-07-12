@@ -21,6 +21,15 @@ export function eachDay(start: string, end: string): string[] {
   return days;
 }
 
+/**
+ * The next date falling on the given weekday (0 = Sunday … 6 = Saturday).
+ * Returns `date` itself when it already falls on that weekday.
+ */
+export function nextWeekday(date: string, weekday: number): string {
+  const diff = (weekday - new Date(`${date}T00:00:00Z`).getUTCDay() + 7) % 7;
+  return addDays(date, diff);
+}
+
 /** Monday-start week, matching the Laravel calendar. */
 export function startOfWeek(date: string): string {
   const d = new Date(`${date}T00:00:00Z`);
