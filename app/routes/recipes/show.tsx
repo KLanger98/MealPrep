@@ -437,7 +437,7 @@ export default function ShowRecipe() {
               <span>Servings:</span>
               <input
                 type="number"
-                min={0.5}
+                min={0}
                 step={0.5}
                 value={targetServings}
                 onChange={(e) => setTargetServings(Number(e.target.value) || recipe.servings)}
