@@ -53,7 +53,7 @@ export function FilterBar({ options }: { options: FilterOptions }) {
     "shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-900";
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+    <div className="w-full flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <input
         type="search"
         value={q}
@@ -63,7 +63,7 @@ export function FilterBar({ options }: { options: FilterOptions }) {
       />
       {/* On mobile the selects scroll sideways in one row; sm:contents lets
           them rejoin the flex-wrap layout on larger screens. */}
-      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:contents">
+      <div className="-mx-4 flex flex-wrap items-center gap-2 overflow-x-auto px-4 sm:contents">
       <select
         value={current.type}
         onChange={(e) => updateParams({ type: e.target.value })}

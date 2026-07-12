@@ -104,24 +104,24 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             >
               {({ isActive }) => (
                 <>
-                  <span
-                    className={`rounded-full px-4 py-0.5 transition-colors ${
+                  <div
+                    className={`rounded-xl p-2 transition-colors flex flex-col items-center gap-1 ${
                       isActive
                         ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
                         : "text-stone-500 dark:text-stone-400"
                     }`}
                   >
                     <item.icon className="h-[22px] w-[22px]" />
-                  </span>
                   <span
                     className={
-                      isActive
+                        isActive
                         ? "text-green-700 dark:text-green-400"
                         : "text-stone-500 dark:text-stone-400"
                     }
-                  >
+                    >
                     {item.shortLabel}
                   </span>
+                </div>
                 </>
               )}
             </NavLink>
