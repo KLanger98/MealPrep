@@ -9,6 +9,7 @@ import {
   type CalendarAssignment,
 } from "../components/assignment-card";
 import { AssignmentModal, type ModalContext } from "../components/assignment-modal";
+import { WeekList } from "../components/week-list";
 import { SLOTS } from "../lib/config";
 import {
   addDays,
@@ -127,7 +128,10 @@ export default function Calendar() {
   const { weekStart, weekLabel, days, slots, assignments, recipeOptions } =
     useLoaderData<typeof loader>();
   const navigate = useNavigate();
-  const [, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  // ?view=list swaps the grid (desktop) / day agenda (mobile) for a stacked
+  // list of the week's days.
+  const view = searchParams.get("view") === "list" ? "list" : "default";
 
   const [modalContext, setModalContext] = useState<ModalContext | null>(null);
   const [pickedDay, setPickedDay] = useState<string | null>(null);
@@ -159,9 +163,25 @@ export default function Calendar() {
         ? today
         : weekStart;
 
-  function goToWeek(offsetDays: number) {
-    navigate(`/calendar?week=${addDays(weekStart, offsetDays)}`);
+  // Week and view live in the URL together; changing one keeps the other.
+  function calendarUrl(week: string | null, nextView = view) {
+    const params = new URLSearchParams();
+    if (week) params.set("week", week);
+    if (nextView === "list") params.set("view", "list");
+    const query = params.toString();
+    return query ? `/calendar?${query}` : "/calendar";
   }
+
+  function goToWeek(offsetDays: number) {
+    navigate(calendarUrl(addDays(weekStart, offsetDays)));
+  }
+
+  const viewButton = (active: boolean) =>
+    `rounded-md px-2.5 py-1 text-xs font-medium ${
+      active
+        ? "bg-primary text-on-primary"
+        : "text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
+    }`;
 
   const navButton =
     "rounded-lg border border-stone-300 bg-paper px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800";
@@ -169,7 +189,28 @@ export default function Calendar() {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Calendar</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold">Calendar</h1>
+          <div className="flex rounded-lg border border-stone-300 bg-paper p-0.5 dark:border-stone-700 dark:bg-stone-900">
+            <button
+              type="button"
+              className={viewButton(view === "default")}
+              aria-pressed={view === "default"}
+              onClick={() => navigate(calendarUrl(searchParams.get("week"), "default"))}
+            >
+              <span className="sm:hidden">Day</span>
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+            <button
+              type="button"
+              className={viewButton(view === "list")}
+              aria-pressed={view === "list"}
+              onClick={() => navigate(calendarUrl(searchParams.get("week"), "list"))}
+            >
+              List
+            </button>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <span className="mr-2 text-sm text-stone-500 dark:text-stone-400">
             {weekLabel}
@@ -180,7 +221,7 @@ export default function Calendar() {
           <button
             type="button"
             className={navButton}
-            onClick={() => setSearchParams({ week: localToday() })}
+            onClick={() => navigate(calendarUrl(localToday()))}
           >
             Today
           </button>
@@ -190,8 +231,21 @@ export default function Calendar() {
         </div>
       </div>
 
+      {view === "list" && (
+        <div className="mt-4 sm:mt-6">
+          <WeekList
+            days={days}
+            slots={slots}
+            grid={grid}
+            today={today}
+            onAdd={(date, slot) => setModalContext({ date, slot })}
+            onEdit={(assignment) => setModalContext({ assignment })}
+          />
+        </div>
+      )}
+
       {/* Mobile: 7-day strip + one day's agenda. */}
-      <div className="mt-4 sm:hidden">
+      <div className={`mt-4 sm:hidden ${view === "list" ? "hidden" : ""}`}>
         <div className="grid grid-cols-7 gap-1">
           {days.map((day) => {
             const hasMeals = (grid.get(day.date)?.size ?? 0) > 0;
@@ -267,7 +321,7 @@ export default function Calendar() {
       </div>
 
       {/* Desktop: full-week grid. */}
-      <div className="mt-6 hidden overflow-x-auto sm:block">
+      <div className={`mt-6 hidden overflow-x-auto ${view === "list" ? "" : "sm:block"}`}>
         <div className="grid min-w-[900px] grid-cols-[70px_repeat(7,1fr)] gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
           <div className="bg-stone-50 p-2 dark:bg-stone-900"></div>
           {days.map((day) => (
