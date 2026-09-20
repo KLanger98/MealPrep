@@ -5,6 +5,10 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "meal-prep",
+	// Pins deploys to the personal Cloudflare account that owns this worker, so
+	// a wrangler session logged in to another account fails instead of deploying
+	// there. Auth for this account comes from CLOUDFLARE_API_TOKEN in .env.
+	"account_id": "fbb18f89142512cfa874cb91dcfffe76",
 	"compatibility_date": "2026-07-07",
 	"main": "./workers/app.ts",
 	// Set to false before go-live: Cloudflare Access will guard the custom domain,
@@ -15,7 +19,7 @@
 			"binding": "DB",
 			"database_name": "meal-prep",
 			"database_id": "e9ef7f6d-f966-4ca0-a897-e8258c57d6c9",
-			"migrations_dir": "migrations"
+			"migrations_dir": "../../migrations"
 		}
 	],
 	"r2_buckets": [
@@ -27,9 +31,21 @@
 	// MCP server (Streamable HTTP) served from a Durable Object; the endpoint
 	// is /mcp/<MCP_SECRET> (secret set via `wrangler secret put MCP_SECRET`).
 	"durable_objects": {
-		"bindings": [{ "name": "RECIPE_MCP", "class_name": "RecipeMcp" }]
+		"bindings": [
+			{
+				"name": "RECIPE_MCP",
+				"class_name": "RecipeMcp"
+			}
+		]
 	},
-	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["RecipeMcp"] }],
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"RecipeMcp"
+			]
+		}
+	],
 	"observability": {
 		"enabled": true
 	},

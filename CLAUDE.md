@@ -31,3 +31,6 @@ In production, recipes are created via the app UI or the MCP server's
   `workers/app.ts` (entry: MCP secret path + password gate + React Router).
 - Secrets: `MCP_SECRET` (MCP endpoint path), `APP_PASSWORD` (login gate;
   empty locally = gate off). See `.dev.vars`.
+- Deploys are pinned to the personal Cloudflare account via `account_id` in
+  `wrangler.jsonc`; wrangler authenticates with `CLOUDFLARE_API_TOKEN` from
+  `.env` (see `.env.example`), not the machine's `wrangler login` session.
