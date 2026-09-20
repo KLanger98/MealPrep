@@ -102,7 +102,7 @@ export function AssignmentModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-t-2xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-xl sm:pb-5 dark:bg-stone-900">
+      <div className="w-full max-w-md rounded-t-2xl bg-paper p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-xl sm:pb-5 dark:bg-stone-900">
         <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-stone-200 sm:hidden dark:bg-stone-700" />
         <h2 className="text-lg font-semibold">
           {editing ? `Edit batch — ${editing.recipe.title}` : "Add to calendar"}
@@ -133,7 +133,7 @@ export function AssignmentModal({
                     type="button"
                     className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm ${
                       recipeId === recipe.id
-                        ? "bg-green-600 text-white"
+                        ? "bg-primary text-on-primary"
                         : "hover:bg-stone-100 dark:hover:bg-stone-800"
                     }`}
                     onClick={() => setRecipeId(recipe.id)}
@@ -164,7 +164,7 @@ export function AssignmentModal({
                   type="button"
                   className={`flex-1 rounded-lg border px-2 py-1.5 text-sm font-medium capitalize ${
                     slot === s
-                      ? "border-green-300 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-300"
+                      ? "border-accent-300 bg-accent-50 text-accent-800 dark:border-accent-900 dark:bg-accent-950 dark:text-accent-300"
                       : "border-stone-300 text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
                   }`}
                   onClick={() => setSlot(s)}
@@ -237,7 +237,7 @@ export function AssignmentModal({
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 sm:py-1.5"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-hover disabled:opacity-50 sm:py-1.5"
               disabled={submitting || (!editing && recipeId === null)}
             >
               {submitLabel}

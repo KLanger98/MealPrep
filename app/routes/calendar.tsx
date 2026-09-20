@@ -164,7 +164,7 @@ export default function Calendar() {
   }
 
   const navButton =
-    "rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800";
+    "rounded-lg border border-stone-300 bg-paper px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800";
 
   return (
     <>
@@ -202,7 +202,7 @@ export default function Calendar() {
                 type="button"
                 className={`relative rounded-lg border py-1.5 text-center ${
                   selected
-                    ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950"
+                    ? "border-accent-300 bg-accent-50 dark:border-accent-900 dark:bg-accent-950"
                     : "border-transparent bg-stone-100 dark:bg-stone-900"
                 }`}
                 onClick={() => setPickedDay(day.date)}
@@ -210,7 +210,7 @@ export default function Calendar() {
                 <div
                   className={`text-[10px] font-medium uppercase tracking-wide ${
                     selected
-                      ? "text-green-700 dark:text-green-400"
+                      ? "text-accent-700 dark:text-accent-400"
                       : "text-stone-400 dark:text-stone-500"
                   }`}
                 >
@@ -219,9 +219,9 @@ export default function Calendar() {
                 <div
                   className={`text-sm font-semibold ${
                     selected
-                      ? "text-green-700 dark:text-green-400"
+                      ? "text-accent-700 dark:text-accent-400"
                       : day.date === today
-                        ? "text-green-700 dark:text-green-400"
+                        ? "text-accent-700 dark:text-accent-400"
                         : "text-stone-700 dark:text-stone-300"
                   }`}
                 >
@@ -253,10 +253,10 @@ export default function Calendar() {
                   ))}
                   <button
                     type="button"
-                    className="w-full rounded-lg border-2 border-dashed border-stone-200 py-2 text-sm font-medium text-stone-400 hover:border-green-400 hover:text-green-600 dark:border-stone-800 dark:text-stone-500 dark:hover:border-green-600 dark:hover:text-green-400"
+                    className="w-full rounded-lg border-2 border-dashed border-stone-200 py-2 text-sm font-medium text-stone-400 hover:border-accent-400 hover:text-accent-600 dark:border-stone-800 dark:text-stone-500 dark:hover:border-accent-600 dark:hover:text-accent-400"
                     onClick={() => setModalContext({ date: selectedDay, slot })}
                   >
-                    <span className="text-green-600 dark:text-green-400">+</span> Add{" "}
+                    <span className="text-accent-600 dark:text-accent-400">+</span> Add{" "}
                     {slot}
                   </button>
                 </div>
@@ -275,7 +275,7 @@ export default function Calendar() {
               key={day.date}
               className={`p-2 text-center ${
                 day.date === today
-                  ? "bg-green-50 dark:bg-green-950"
+                  ? "bg-accent-50 dark:bg-accent-950"
                   : "bg-stone-50 dark:bg-stone-900"
               }`}
             >
@@ -285,7 +285,7 @@ export default function Calendar() {
               <div
                 className={`text-sm font-semibold ${
                   day.date === today
-                    ? "text-green-700 dark:text-green-400"
+                    ? "text-accent-700 dark:text-accent-400"
                     : "text-stone-800 dark:text-stone-200"
                 }`}
               >
@@ -306,8 +306,8 @@ export default function Calendar() {
                   key={slot + day.date}
                   className={`group/cell min-h-24 space-y-1.5 p-1.5 ${
                     day.date === today
-                      ? "bg-green-50/40 dark:bg-green-950/30"
-                      : "bg-white dark:bg-stone-950"
+                      ? "bg-accent-50/40 dark:bg-accent-950/30"
+                      : "bg-paper dark:bg-stone-950"
                   }`}
                 >
                   {(grid.get(day.date)?.get(slot) ?? []).map((assignment) => (
@@ -319,7 +319,7 @@ export default function Calendar() {
                   ))}
                   <button
                     type="button"
-                    className="w-full rounded-md border border-dashed border-stone-200 py-1 text-xs text-stone-300 opacity-0 transition-opacity hover:border-green-400 hover:text-green-600 group-hover/cell:opacity-100 pointer-coarse:opacity-100 dark:border-stone-700 dark:text-stone-600 dark:hover:border-green-500 dark:hover:text-green-400"
+                    className="w-full rounded-md border border-dashed border-stone-200 py-1 text-xs text-stone-300 opacity-0 transition-opacity hover:border-accent-400 hover:text-accent-600 group-hover/cell:opacity-100 pointer-coarse:opacity-100 dark:border-stone-700 dark:text-stone-600 dark:hover:border-accent-500 dark:hover:text-accent-400"
                     onClick={() => setModalContext({ date: day.date, slot })}
                   >
                     + Add

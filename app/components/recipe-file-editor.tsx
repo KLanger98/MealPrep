@@ -26,7 +26,7 @@ export function RecipeFileEditor({
         value={content}
         rows={26}
         spellCheck={false}
-        className="w-full rounded-xl border border-stone-300 bg-white p-4 font-mono text-sm leading-relaxed focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-stone-700 dark:bg-stone-900"
+        className="w-full rounded-xl border border-stone-300 bg-paper p-4 font-mono text-sm leading-relaxed focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500 dark:border-stone-700 dark:bg-stone-900"
         onChange={(e) => onChange(e.target.value)}
       />
 
@@ -37,7 +37,7 @@ export function RecipeFileEditor({
         </p>
         <button
           type="submit"
-          className="shrink-0 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-hover disabled:opacity-50"
           disabled={processing}
         >
           {submitLabel}

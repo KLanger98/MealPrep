@@ -7,4 +7,44 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Palette: https://coolors.co/palette/ccd5ae-e9edc9-fefae0-faedcd-d4a373
+       Only the accents come from the palette; neutrals are Tailwind's stone
+       greys. The source colours are all light, so each ramp adds derived
+       darker stops for text and buttons. */
+
+    /* Sage → olive accent (replaces green). 50 and 400 are palette colours. */
+    --color-accent-50: #e9edc9;
+    --color-accent-100: #e4e9c2;
+    --color-accent-200: #dfe5bc;
+    --color-accent-300: #d8dfb6;
+    --color-accent-400: #ccd5ae;
+    --color-accent-500: #8a9c58;
+    --color-accent-600: #5a6b32;
+    --color-accent-700: #4a5929;
+    --color-accent-800: #3c4822;
+    --color-accent-900: #343b22;
+    --color-accent-950: #2a3019;
+
+    /* Caramel, reserved for ratings. 400 is the palette colour. */
+    --color-caramel-300: #e3bf9a;
+    --color-caramel-400: #d4a373;
+    --color-caramel-500: #c08a55;
+    --color-caramel-600: #9a6235;
+
+    /* Card surface in light mode. */
+    --color-paper: #ffffff;
+
+    /* Primary button. Flips in dark mode (see .dark below): olive with white
+       text on light, sage with dark text on dark. */
+    --color-primary: #5a6b32;
+    --color-primary-hover: #4a5929;
+    --color-on-primary: #ffffff;
 }
+
+.dark {
+    --color-primary: #ccd5ae;
+    --color-primary-hover: #d8dfb6;
+    --color-on-primary: #2a3019;
+}
+

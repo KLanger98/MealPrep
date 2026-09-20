@@ -133,7 +133,7 @@ export default function ShoppingListsIndex() {
 
       <Form
         method="post"
-        className="mt-4 flex flex-col md:flex-wrap   flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+        className="mt-4 flex flex-col md:flex-wrap   flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-paper p-4 dark:border-stone-800 dark:bg-stone-900"
       >
         <div className="w-full flex gap-4">
             <label className=" text-sm font-medium text-stone-700 dark:text-stone-300 w-full">
@@ -174,7 +174,7 @@ export default function ShoppingListsIndex() {
         </label>
         <button
           type="submit"
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-hover disabled:opacity-50"
           disabled={navigation.state === "submitting"}
         >
           Generate list
@@ -188,7 +188,7 @@ export default function ShoppingListsIndex() {
           </span>
           <button
             type="button"
-            className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 hover:border-green-400 hover:text-green-700 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-green-600 dark:hover:text-green-400"
+            className="rounded-lg border border-stone-300 bg-paper px-3 py-1.5 text-xs font-medium text-stone-700 hover:border-accent-400 hover:text-accent-700 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-accent-600 dark:hover:text-accent-400"
             disabled={navigation.state === "submitting"}
             onClick={() => quickWeek(5)}
           >
@@ -196,7 +196,7 @@ export default function ShoppingListsIndex() {
           </button>
           <button
             type="button"
-            className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 hover:border-green-400 hover:text-green-700 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-green-600 dark:hover:text-green-400"
+            className="rounded-lg border border-stone-300 bg-paper px-3 py-1.5 text-xs font-medium text-stone-700 hover:border-accent-400 hover:text-accent-700 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-accent-600 dark:hover:text-accent-400"
             disabled={navigation.state === "submitting"}
             onClick={() => quickWeek(6)}
           >
@@ -215,10 +215,10 @@ export default function ShoppingListsIndex() {
           {lists.map((list) => (
             <div
               key={list.id}
-              className="flex items-center justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3 dark:border-stone-800 dark:bg-stone-900"
+              className="flex items-center justify-between gap-4 rounded-xl border border-stone-200 bg-paper px-4 py-3 dark:border-stone-800 dark:bg-stone-900"
             >
               <Link to={`/shopping-lists/${list.id}`} className="flex-1">
-                <span className="font-medium text-stone-800 hover:text-green-700 dark:text-stone-200 dark:hover:text-green-400">
+                <span className="font-medium text-stone-800 hover:text-accent-700 dark:text-stone-200 dark:hover:text-accent-400">
                   {list.name || list.label}
                 </span>
                 {list.name && (

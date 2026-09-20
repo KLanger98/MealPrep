@@ -56,11 +56,11 @@ export function AssignmentCard({
   }
 
   return (
-    <div className="group rounded-lg border border-stone-200 bg-white p-2 text-xs shadow-sm dark:border-stone-700 dark:bg-stone-900">
+    <div className="group rounded-lg border border-stone-200 bg-paper p-2 text-xs shadow-sm dark:border-stone-700 dark:bg-stone-900">
       <div className="flex items-start justify-between gap-1">
         <Link
           to={`/recipes/${assignment.recipe.slug}`}
-          className="font-medium text-stone-800 hover:text-green-700 dark:text-stone-200 dark:hover:text-green-400"
+          className="font-medium text-stone-800 hover:text-accent-700 dark:text-stone-200 dark:hover:text-accent-400"
         >
           {assignment.recipe.title}
         </Link>
@@ -77,7 +77,7 @@ export function AssignmentCard({
 
       <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400">
         {assignment.scale_factor !== 1 && (
-          <span className="rounded bg-green-50 px-1 font-medium text-green-700 dark:bg-green-950 dark:text-green-300">
+          <span className="rounded bg-accent-50 px-1 font-medium text-accent-700 dark:bg-accent-950 dark:text-accent-300">
             ×{assignment.scale_factor}
           </span>
         )}

@@ -50,7 +50,7 @@ export function FilterBar({ options }: { options: FilterOptions }) {
   }
 
   const selectClass =
-    "shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-900";
+    "shrink-0 rounded-lg border border-stone-300 bg-paper px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-900";
 
   return (
     <div className="w-full flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
@@ -59,7 +59,7 @@ export function FilterBar({ options }: { options: FilterOptions }) {
         value={q}
         onChange={(e) => onSearchInput(e.target.value)}
         placeholder="Search recipes or ingredients…"
-        className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 sm:w-64 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900"
+        className="w-full rounded-lg border border-stone-300 bg-paper px-3 py-2 text-sm focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500 sm:w-64 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900"
       />
       {/* On mobile the selects scroll sideways in one row; sm:contents lets
           them rejoin the flex-wrap layout on larger screens. */}

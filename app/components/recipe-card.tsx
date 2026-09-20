@@ -23,7 +23,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeCardData }) {
   return (
     <Link
       to={`/recipes/${recipe.slug}`}
-      className="block overflow-hidden rounded-xl border border-stone-200 bg-white transition-shadow hover:shadow-md dark:border-stone-800 dark:bg-stone-900 dark:hover:shadow-stone-900"
+      className="block overflow-hidden rounded-xl border border-stone-200 bg-paper transition-shadow hover:shadow-md dark:border-stone-800 dark:bg-stone-900 dark:hover:shadow-stone-900"
     >
       {recipe.image_url && (
         <img
@@ -39,13 +39,13 @@ export function RecipeCard({ recipe }: { recipe: RecipeCardData }) {
             {recipe.title}
           </h2>
           {recipe.cost && (
-            <span className="shrink-0 text-sm font-medium text-green-700 dark:text-green-400">
+            <span className="shrink-0 text-sm font-medium text-accent-700 dark:text-accent-400">
               {COST_LABELS[recipe.cost] ?? recipe.cost}
             </span>
           )}
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="rounded-full bg-green-50 px-2 py-0.5 font-medium capitalize text-green-800 dark:bg-green-950 dark:text-green-300">
+          <span className="rounded-full bg-accent-50 px-2 py-0.5 font-medium capitalize text-accent-800 dark:bg-accent-950 dark:text-accent-300">
             {recipe.type}
           </span>
           {recipe.protein && (
@@ -68,7 +68,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeCardData }) {
           </span>
           {recipe.total_minutes && <span>{recipe.total_minutes} min</span>}
           {recipe.rating !== null && (
-            <span className="ml-auto font-medium text-amber-600 dark:text-amber-400">
+            <span className="ml-auto font-medium text-caramel-600 dark:text-caramel-400">
               ★ {recipe.rating}/10
             </span>
           )}

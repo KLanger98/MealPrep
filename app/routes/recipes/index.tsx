@@ -94,7 +94,7 @@ export default function RecipesIndex() {
           <h1 className="text-2xl font-semibold">Recipes</h1>
           <Link
             to="/recipes/new"
-            className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
+            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-on-primary hover:bg-primary-hover"
           >
             + New recipe
           </Link>

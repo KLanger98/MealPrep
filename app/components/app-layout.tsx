@@ -48,11 +48,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+      <header className="border-b border-stone-200 bg-paper dark:border-stone-800 dark:bg-stone-900">
         <div className="mx-auto flex max-w-6xl items-center gap-8 px-4 py-3 sm:px-6">
           <Link
             to="/recipes"
-            className="flex items-center gap-2 text-lg font-semibold text-green-700 dark:text-green-400"
+            className="flex items-center gap-2 text-lg font-semibold text-accent-700 dark:text-accent-400"
           >
             <span aria-hidden="true">🥘</span>
             <span>Meal Prep</span>
@@ -65,7 +65,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 className={({ isActive }) =>
                   `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-300"
+                      ? "bg-accent-50 text-accent-800 dark:bg-accent-950 dark:text-accent-300"
                       : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
                   }`
                 }
@@ -92,7 +92,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white pb-[env(safe-area-inset-bottom)] sm:hidden dark:border-stone-800 dark:bg-stone-900"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-paper pb-[env(safe-area-inset-bottom)] sm:hidden dark:border-stone-800 dark:bg-stone-900"
         aria-label="Primary"
       >
         <div className="grid grid-cols-3 px-2 py-1.5">
@@ -107,7 +107,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <div
                     className={`rounded-xl p-2 transition-colors flex flex-col items-center gap-1 ${
                       isActive
-                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
+                        ? "bg-accent-50 text-accent-700 dark:bg-accent-950 dark:text-accent-400"
                         : "text-stone-500 dark:text-stone-400"
                     }`}
                   >
@@ -115,7 +115,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <span
                     className={
                         isActive
-                        ? "text-green-700 dark:text-green-400"
+                        ? "text-accent-700 dark:text-accent-400"
                         : "text-stone-500 dark:text-stone-400"
                     }
                     >

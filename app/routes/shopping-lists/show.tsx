@@ -128,7 +128,7 @@ function ItemCheckbox({ item, listId }: { item: Item; listId: number }) {
     <input
       type="checkbox"
       checked={checked}
-      className="size-4 translate-y-0.5 rounded border-stone-300 text-green-600 focus:ring-green-500 dark:border-stone-600 dark:bg-stone-800"
+      className="size-4 translate-y-0.5 rounded border-stone-300 text-accent-600 focus:ring-accent-500 dark:border-stone-600 dark:bg-stone-800"
       onChange={() =>
         fetcher.submit(
           { intent: "toggle", itemId: item.id },
@@ -191,7 +191,7 @@ export default function ShowShoppingList() {
       type="button"
       className={`rounded-md px-3 py-1 ${
         viewMode === mode
-          ? "bg-green-600 text-white"
+          ? "bg-primary text-on-primary"
           : "text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
       }`}
       onClick={() => switchView(mode)}
@@ -231,13 +231,13 @@ export default function ShowShoppingList() {
           <span className="text-sm text-stone-500 dark:text-stone-400">
             {checkedCount}/{list.items.length} ticked
           </span>
-          <div className="flex rounded-lg border border-stone-300 bg-white p-0.5 text-sm dark:border-stone-700 dark:bg-stone-900">
+          <div className="flex rounded-lg border border-stone-300 bg-paper p-0.5 text-sm dark:border-stone-700 dark:bg-stone-900">
             {toggleButton("aisle", "By aisle")}
             {toggleButton("recipe", "By recipe")}
           </div>
           <button
             type="button"
-            className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
+            className="rounded-lg border border-stone-300 bg-paper px-3 py-1.5 text-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
             title="Rebuild from the calendar (keeps ticked items ticked)"
             disabled={regenerate.state !== "idle"}
             onClick={() =>
@@ -259,12 +259,12 @@ export default function ShowShoppingList() {
               <h2 className="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">
                 {group.recipe}
                 {group.scale !== 1 && (
-                  <span className="ml-1 normal-case text-green-700 dark:text-green-400">
+                  <span className="ml-1 normal-case text-accent-700 dark:text-accent-400">
                     ×{group.scale}
                   </span>
                 )}
               </h2>
-              <ul className="mt-2 divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
+              <ul className="mt-2 divide-y divide-stone-100 rounded-xl border border-stone-200 bg-paper dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
                 {group.entries.map(({ item, source }) => (
                   <li key={item.id}>
                     <label className="flex cursor-pointer items-baseline gap-3 px-4 py-2.5">
@@ -304,7 +304,7 @@ export default function ShowShoppingList() {
               <h2 className="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">
                 {group.category}
               </h2>
-              <ul className="mt-2 divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
+              <ul className="mt-2 divide-y divide-stone-100 rounded-xl border border-stone-200 bg-paper dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
                 {group.items.map((item) => (
                   <li key={item.id}>
                     <label

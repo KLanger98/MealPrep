@@ -247,8 +247,8 @@ export default function ShowRecipe() {
             type="button"
             className={`rounded-lg px-3 py-1.5 text-sm shadow-sm ${
               recipe.image_url
-                ? "bg-white/90 text-stone-700 hover:bg-white dark:bg-stone-900/90 dark:text-stone-200 dark:hover:bg-stone-900"
-                : "border border-dashed border-stone-300 text-stone-500 hover:border-green-400 hover:text-green-700 dark:border-stone-700 dark:text-stone-400 dark:hover:border-green-500 dark:hover:text-green-400"
+                ? "bg-paper/90 text-stone-700 hover:bg-paper dark:bg-stone-900/90 dark:text-stone-200 dark:hover:bg-stone-900"
+                : "border border-dashed border-stone-300 text-stone-500 hover:border-accent-400 hover:text-accent-700 dark:border-stone-700 dark:text-stone-400 dark:hover:border-accent-500 dark:hover:text-accent-400"
             }`}
             disabled={uploadingPhoto}
             onClick={() => photoInput.current?.click()}
@@ -262,7 +262,7 @@ export default function ShowRecipe() {
           {recipe.image_url && (
             <button
               type="button"
-              className="rounded-lg bg-white/90 px-3 py-1.5 text-sm text-red-600 shadow-sm hover:bg-white dark:bg-stone-900/90 dark:text-red-400 dark:hover:bg-stone-900"
+              className="rounded-lg bg-paper/90 px-3 py-1.5 text-sm text-red-600 shadow-sm hover:bg-paper dark:bg-stone-900/90 dark:text-red-400 dark:hover:bg-stone-900"
               onClick={removePhoto}
             >
               Remove
@@ -283,7 +283,7 @@ export default function ShowRecipe() {
         <div>
           <h1 className="text-3xl font-semibold">{recipe.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="rounded-full bg-green-50 px-2 py-0.5 font-medium capitalize text-green-800 dark:bg-green-950 dark:text-green-300">
+            <span className="rounded-full bg-accent-50 px-2 py-0.5 font-medium capitalize text-accent-800 dark:bg-accent-950 dark:text-accent-300">
               {recipe.type}
             </span>
             {recipe.protein && (
@@ -316,7 +316,7 @@ export default function ShowRecipe() {
                     href={recipe.source}
                     target="_blank"
                     rel="noopener"
-                    className="text-green-700 underline underline-offset-2 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                    className="text-accent-700 underline underline-offset-2 hover:text-accent-800 dark:text-accent-400 dark:hover:text-accent-300"
                   >
                     {sourceLabel}
                   </a>
@@ -340,8 +340,8 @@ export default function ShowRecipe() {
                 type="button"
                 className={`text-lg leading-none transition-colors ${
                   star <= (hoverRating ?? recipe.rating ?? 0)
-                    ? "text-amber-500"
-                    : "text-stone-300 hover:text-amber-300 dark:text-stone-600 dark:hover:text-amber-500"
+                    ? "text-caramel-500 dark:text-caramel-400"
+                    : "text-stone-300 hover:text-caramel-300 dark:text-stone-600 dark:hover:text-caramel-500"
                 }`}
                 title={`${star}/10${star === recipe.rating ? " (click to clear)" : ""}`}
                 onMouseEnter={() => setHoverRating(star)}
@@ -365,7 +365,7 @@ export default function ShowRecipe() {
           {!recipe.missing && (
             <button
               type="button"
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 sm:py-1.5"
+              className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-hover sm:py-1.5"
               onClick={() => setPlanning(true)}
             >
               <svg
@@ -388,14 +388,14 @@ export default function ShowRecipe() {
             {!recipe.missing && (
               <Link
                 to={`/recipes/${recipe.slug}/edit`}
-                className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-center text-sm hover:bg-stone-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
+                className="rounded-lg border border-stone-300 bg-paper px-3 py-2 text-center text-sm hover:bg-stone-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
               >
                 Edit
               </Link>
             )}
             <button
               type="button"
-              className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-red-600 hover:bg-red-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:text-red-400 dark:hover:bg-red-950"
+              className="rounded-lg border border-stone-300 bg-paper px-3 py-2 text-sm text-red-600 hover:bg-red-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:text-red-400 dark:hover:bg-red-950"
               onClick={destroyRecipe}
             >
               Delete
@@ -415,7 +415,7 @@ export default function ShowRecipe() {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(280px,1fr)_2fr]">
         <aside>
-          <div className="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+          <div className="rounded-xl border border-stone-200 bg-paper p-4 dark:border-stone-800 dark:bg-stone-900">
             <div className="flex items-center justify-between gap-2">
               <h2 className="font-semibold">Ingredients</h2>
               <div className="flex items-center gap-1">
@@ -425,7 +425,7 @@ export default function ShowRecipe() {
                     type="button"
                     className={`rounded-md px-2 py-1 text-xs font-medium ${
                       Math.abs(scale - factor) < 0.001
-                        ? "bg-green-600 text-white"
+                        ? "bg-primary text-on-primary"
                         : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
                     }`}
                     onClick={() =>
@@ -457,7 +457,7 @@ export default function ShowRecipe() {
                 className="w-20 rounded-md border border-stone-300 px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-950"
               />
               {Math.abs(scale - 1) > 0.001 && (
-                <span className="text-xs text-green-700 dark:text-green-400">
+                <span className="text-xs text-accent-700 dark:text-accent-400">
                   ({Math.round(scale * 100) / 100}× recipe)
                 </span>
               )}
