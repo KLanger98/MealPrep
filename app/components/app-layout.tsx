@@ -1,6 +1,7 @@
 import { Link, NavLink } from "react-router";
 import { useTheme, type Theme } from "../lib/theme";
 import { SyncErrorBanner } from "./sync-error-banner";
+import { LogoMark } from "./logo";
 
 const NAV_ITEMS = [
   { label: "Recipes", shortLabel: "Recipes", href: "/recipes", icon: BookIcon },
@@ -54,7 +55,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             to="/recipes"
             className="flex items-center gap-2 text-lg font-semibold text-accent-700 dark:text-accent-400"
           >
-            <span aria-hidden="true">🥘</span>
+            <LogoMark className="size-7" />
             <span>Meal Prep</span>
           </Link>
           <nav className="hidden gap-1 sm:flex">

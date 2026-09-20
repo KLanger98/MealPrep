@@ -98,6 +98,8 @@ function safeRedirect(value: unknown): string {
 const escapeAttr = (value: string) =>
   value.replace(/[&"<>]/g, (c) => `&#${c.charCodeAt(0)};`);
 
+// Standalone page served before the app (and its stylesheet) is reachable, so
+// brand colours are inlined here — keep them in step with app/app.css.
 function loginPage(redirectTo: string, error: string | null, status: number): Response {
   const html = `<!doctype html>
 <html lang="en">
@@ -112,14 +114,17 @@ body{font-family:ui-sans-serif,system-ui,sans-serif;background:#fafaf9;color:#1c
 form{width:100%;max-width:320px;padding:24px;text-align:center}
 h1{font-size:20px;font-weight:600;margin:0 0 16px}
 input[type=password]{width:100%;box-sizing:border-box;padding:10px 12px;font-size:16px;border:1px solid #d6d3d1;border-radius:10px;background:transparent;color:inherit;margin-bottom:12px}
-button{width:100%;padding:10px;font-size:15px;font-weight:500;color:#fff;background:#16a34a;border:0;border-radius:10px;cursor:pointer}
-button:hover{background:#15803d}
+button{width:100%;padding:10px;font-size:15px;font-weight:500;color:#fff;background:#5a6b32;border:0;border-radius:10px;cursor:pointer}
+button:hover{background:#4a5929}
+@media(prefers-color-scheme:dark){button{color:#2a3019;background:#ccd5ae}button:hover{background:#d8dfb6}}
+h1 svg{width:28px;height:28px;vertical-align:-6px;margin-right:6px;color:#5a6b32}
+@media(prefers-color-scheme:dark){h1 svg{color:#ccd5ae}}
 p.err{color:#dc2626;font-size:14px;margin:0 0 12px}
 </style>
 </head>
 <body>
 <form method="post" action="/login">
-<h1>🥘 Meal Prep</h1>
+<h1><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 25h34a17 17 0 0 1-34 0z" fill="currentColor"/><path d="M24 21c0-8 5-13 13-13 0 8-5 13-13 13zM22 21c0-5-3-8-8-8 0 5 3 8 8 8z" fill="#d4a373"/></svg>Meal Prep</h1>
 ${error ? `<p class="err">${error}</p>` : ""}
 <input type="hidden" name="redirect" value="${escapeAttr(redirectTo)}">
 <input type="password" name="password" placeholder="Password" autofocus autocomplete="current-password">
