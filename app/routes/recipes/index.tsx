@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { and, asc, eq, isNull, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/index";
 import { recipes } from "../../../database/schema";
@@ -43,7 +43,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     .select()
     .from(recipes)
     .where(and(...conditions))
-    .orderBy(asc(recipes.title));
+    // Newest first; id breaks ties for recipes synced in the same batch.
+    .orderBy(desc(recipes.created_at), desc(recipes.id));
 
   // Filter dropdown options come from all available recipes, not the
   // filtered set (matches the Laravel controller).
