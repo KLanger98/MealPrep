@@ -56,8 +56,8 @@ function splitFrontmatter(
 }
 
 /**
- * Parse raw recipe markdown (a recipes/*.md R2 object or in-app editor
- * content) into recipe attributes plus non-fatal warnings.
+ * Parse a raw recipe document (the import format described in
+ * recipes/SCHEMA.md) into recipe attributes plus non-fatal warnings.
  *
  * @throws RecipeParseError on broken YAML or a missing title
  */

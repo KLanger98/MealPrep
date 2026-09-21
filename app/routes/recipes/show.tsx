@@ -17,9 +17,9 @@ import { IngredientList } from "../../components/ingredient-list";
 import { COST_LABELS } from "../../components/recipe-card";
 import { SLOTS } from "../../lib/config";
 import { getDb } from "../../lib/db";
-import { setFrontmatterRating } from "../../lib/frontmatter-surgery";
 import { renderMarkdown } from "../../lib/markdown";
-import { syncOne } from "../../lib/recipe-syncer";
+import { imageKeysFor } from "../../lib/recipe-images";
+import { loadIngredients } from "../../lib/recipe-store";
 import { prepareUpload } from "../../lib/photo-resize";
 import { recipeImageUrl } from "../../lib/urls";
 
@@ -52,10 +52,8 @@ export async function loader({ params }: Route.LoaderArgs) {
       cook_minutes: recipe.cook_minutes,
       servings: recipe.servings,
       tags: recipe.tags,
-      ingredients: recipe.ingredients,
+      ingredients: await loadIngredients(db, recipe.id),
       body_html: renderMarkdown(recipe.body_markdown ?? ""),
-      missing: recipe.missing_at !== null,
-      file: recipe.r2_key,
       image_url: recipeImageUrl(recipe.slug, recipe.image_key, recipe.image_etag),
     },
   };
@@ -76,19 +74,17 @@ export async function action({ request, params }: Route.ActionArgs) {
   const intent = form.get("intent");
 
   if (intent === "delete") {
-    // Explicit delete removes the file, photo and index row (assignments
-    // cascade), unlike a file disappearing on its own, which only flags
-    // missing_at.
-    await env.RECIPES.delete(
-      [recipe.r2_key, recipe.image_key].filter((k): k is string => k !== null),
-    );
+    // Removes the recipe (ingredient lines and assignments cascade) and its
+    // photo. Any legacy .md object stays in the bucket as a backup.
+    const photos = await imageKeysFor(env.RECIPES, recipe.slug);
+    const keys = new Set(photos.map((photo) => photo.key));
+    if (recipe.image_key !== null) keys.add(recipe.image_key);
+    if (keys.size > 0) await env.RECIPES.delete([...keys]);
     await db.delete(recipes).where(eq(recipes.id, recipe.id));
     return redirect("/recipes");
   }
 
   if (intent === "rate") {
-    // Set or clear the rating by rewriting just the `rating:` line in the
-    // file's frontmatter — the file stays the source of truth.
     const raw = form.get("rating");
     const rating =
       raw === null || raw === "" ? null : Math.round(Number(raw) * 10) / 10;
@@ -97,26 +93,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       return data({ errors: { rating: "Rating must be between 0 and 10." } }, 422);
     }
 
-    const object = await env.RECIPES.get(recipe.r2_key);
-    if (object === null) {
-      return data(
-        { errors: { rating: "The recipe file is missing — restore it before rating." } },
-        422,
-      );
-    }
-
-    const updated = setFrontmatterRating(await object.text(), rating);
-    if (updated === null) {
-      return data(
-        { errors: { rating: "Could not find the frontmatter block in the recipe file." } },
-        422,
-      );
-    }
-
-    const put = await env.RECIPES.put(recipe.r2_key, updated, {
-      httpMetadata: { contentType: "text/markdown" },
-    });
-    await syncOne(db, env.RECIPES, recipe.r2_key, updated, put!.etag);
+    await db.update(recipes).set({ rating }).where(eq(recipes.id, recipe.id));
 
     return { ok: true };
   }
@@ -158,7 +135,7 @@ export default function ShowRecipe() {
   function destroyRecipe() {
     if (
       confirm(
-        `Delete "${recipe.title}"? This deletes the .md file and removes it from any meal plans.`,
+        `Delete "${recipe.title}"? This also removes it from any meal plans.`,
       )
     ) {
       submit({ intent: "delete" }, { method: "post" });
@@ -223,14 +200,6 @@ export default function ShowRecipe() {
       >
         ← All recipes
       </Link>
-
-      {recipe.missing && (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
-          The file for this recipe (
-          <span className="font-mono">{recipe.file}</span>) is missing. Showing
-          the last indexed version.
-        </div>
-      )}
 
       <div className="relative mt-4">
         {recipe.image_url && (
@@ -362,37 +331,33 @@ export default function ShowRecipe() {
           </div>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-          {!recipe.missing && (
-            <button
-              type="button"
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-hover sm:py-1.5"
-              onClick={() => setPlanning(true)}
+          <button
+            type="button"
+            className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-hover sm:py-1.5"
+            onClick={() => setPlanning(true)}
+          >
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
             >
-              <svg
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
-              </svg>
-              Add to calendar
-            </button>
-          )}
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
+            </svg>
+            Add to calendar
+          </button>
           <div className="grid grid-cols-2 gap-2 sm:flex">
-            {!recipe.missing && (
-              <Link
-                to={`/recipes/${recipe.slug}/edit`}
-                className="rounded-lg border border-stone-300 bg-paper px-3 py-2 text-center text-sm hover:bg-stone-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
-              >
-                Edit
-              </Link>
-            )}
+            <Link
+              to={`/recipes/${recipe.slug}/edit`}
+              className="rounded-lg border border-stone-300 bg-paper px-3 py-2 text-center text-sm hover:bg-stone-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:hover:bg-stone-800"
+            >
+              Edit
+            </Link>
             <button
               type="button"
               className="rounded-lg border border-stone-300 bg-paper px-3 py-2 text-sm text-red-600 hover:bg-red-50 sm:py-1.5 dark:border-stone-700 dark:bg-stone-900 dark:text-red-400 dark:hover:bg-red-950"

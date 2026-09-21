@@ -7,10 +7,14 @@ import {
 } from "../../database/schema";
 import { CATEGORY_ORDER } from "./config";
 import type { Db } from "./db";
+import { loadIngredientsFor } from "./recipe-store";
 import { canonicalize, humanize } from "./unit-normalizer";
 
 export interface BatchInput {
-  recipe: { title: string; ingredients: Ingredient[] };
+  recipe: {
+    title: string;
+    ingredients: (Ingredient & { ingredient_id?: number })[];
+  };
   scaleFactor: number;
 }
 
@@ -25,8 +29,8 @@ export interface MergedLine {
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
- * Explode every batch's ingredients (scaled), then merge lines that share a
- * normalized name + canonical unit. Unquantified items merge into a single
+ * Explode every batch's ingredients (scaled), then merge lines that share an
+ * ingredient (by id, or normalized name when there is none) + canonical unit. Unquantified items merge into a single
  * unquantified line per name.
  */
 export function mergeIngredients(batches: BatchInput[]): MergedLine[] {
@@ -59,7 +63,8 @@ export function mergeIngredients(batches: BatchInput[]): MergedLine[] {
         );
       }
 
-      const key = `${name}|${quantity === null ? "" : (unit ?? "")}`;
+      const identity = ingredient.ingredient_id ?? name;
+      const key = `${identity}|${quantity === null ? "" : (unit ?? "")}`;
 
       let line = lines.get(key);
       if (!line) {
@@ -124,8 +129,8 @@ export async function generate(db: Db, list: ShoppingList): Promise<void> {
     .select({
       batchId: mealAssignments.batch_id,
       scaleFactor: mealAssignments.scale_factor,
+      recipeId: recipes.id,
       title: recipes.title,
-      ingredients: recipes.ingredients,
     })
     .from(mealAssignments)
     .innerJoin(recipes, eq(mealAssignments.recipe_id, recipes.id))
@@ -137,6 +142,10 @@ export async function generate(db: Db, list: ShoppingList): Promise<void> {
     )
     .orderBy(asc(mealAssignments.id));
 
+  const ingredientsByRecipe = await loadIngredientsFor(db, [
+    ...new Set(rows.map((row) => row.recipeId)),
+  ]);
+
   const seenBatches = new Set<string>();
   const batches: BatchInput[] = [];
 
@@ -144,7 +153,10 @@ export async function generate(db: Db, list: ShoppingList): Promise<void> {
     if (seenBatches.has(row.batchId)) continue;
     seenBatches.add(row.batchId);
     batches.push({
-      recipe: { title: row.title, ingredients: row.ingredients },
+      recipe: {
+        title: row.title,
+        ingredients: ingredientsByRecipe.get(row.recipeId) ?? [],
+      },
       scaleFactor: row.scaleFactor,
     });
   }

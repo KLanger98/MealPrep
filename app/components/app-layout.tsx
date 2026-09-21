@@ -1,6 +1,5 @@
 import { Link, NavLink } from "react-router";
 import { useTheme, type Theme } from "../lib/theme";
-import { SyncErrorBanner } from "./sync-error-banner";
 import { LogoMark } from "./logo";
 
 const NAV_ITEMS = [
@@ -88,7 +87,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 sm:px-6 sm:pb-6">
-        <SyncErrorBanner />
         {children}
       </main>
 

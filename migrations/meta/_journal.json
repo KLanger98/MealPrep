@@ -8,6 +8,13 @@
       "when": 1783405257228,
       "tag": "0000_loose_silver_sable",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790027036607,
+      "tag": "0001_ingredient_tables",
+      "breakpoints": true
     }
   ]
 }

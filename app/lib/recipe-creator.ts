@@ -1,19 +1,21 @@
 import { eq } from "drizzle-orm";
 import { recipes } from "../../database/schema";
-import { MAX_RECIPE_FILE_CHARS, RECIPES_PREFIX } from "./config";
+import { MAX_RECIPE_FILE_CHARS } from "./config";
 import type { Db } from "./db";
+import { probeImage } from "./recipe-images";
 import { parseRecipe, RecipeParseError } from "./recipe-parser";
-import { syncOne } from "./recipe-syncer";
+import { insertRecipe } from "./recipe-store";
 
 export type CreateRecipeResult =
   | { ok: true; slug: string; warnings: string[] }
   | { ok: false; error: string };
 
 /**
- * Create a new recipe from raw .md content: validate, reject duplicate
- * slugs, write to R2, and index into D1. Shared by the in-app editor route
- * and the MCP create_recipe tool. Errors come back as descriptive messages
- * (not throws) so both a form and an LLM can act on them.
+ * Import a new recipe from raw .md content: validate, reject duplicate
+ * slugs, and store it in D1. Markdown is only the input format here — the
+ * MCP create_recipe tool and the seed script speak it; nothing is written
+ * to R2. Errors come back as descriptive messages (not throws) so an LLM
+ * can act on them.
  */
 export async function createRecipe(
   db: Db,
@@ -37,30 +39,32 @@ export async function createRecipe(
     throw e;
   }
 
-  const slug = parsed.data.slug;
-  const key = `${RECIPES_PREFIX}${slug}.md`;
+  const { data, warnings } = parsed;
 
   const existing = await db
     .select({ id: recipes.id })
     .from(recipes)
-    .where(eq(recipes.slug, slug))
+    .where(eq(recipes.slug, data.slug))
     .limit(1);
 
-  if (existing.length > 0 || (await bucket.head(key)) !== null) {
+  if (existing.length > 0) {
     return {
       ok: false,
-      error: `A recipe with the slug "${slug}" already exists.`,
+      error: `A recipe with the slug "${data.slug}" already exists.`,
     };
   }
 
-  const object = await bucket.put(key, content, {
-    httpMetadata: { contentType: "text/markdown" },
+  // A photo may have been uploaded to the bucket ahead of the recipe.
+  const image = await probeImage(bucket, data.slug);
+
+  const { slug, ingredients, rating, meta, image: _image, ...fields } = data;
+
+  await insertRecipe(db, slug, fields, ingredients, {
+    rating,
+    meta,
+    image_key: image?.key ?? null,
+    image_etag: image?.etag ?? null,
   });
 
-  const synced = await syncOne(db, bucket, key, content, object!.etag);
-  if (!synced.ok) {
-    return { ok: false, error: synced.error };
-  }
-
-  return { ok: true, slug: synced.slug, warnings: synced.warnings };
+  return { ok: true, slug, warnings };
 }

@@ -3,10 +3,9 @@ import { data } from "react-router";
 import { eq } from "drizzle-orm";
 import type { Route } from "./+types/image";
 import { recipes } from "../../../database/schema";
-import { IMAGE_EXTENSIONS, MAX_PHOTO_BYTES } from "../../lib/config";
+import { MAX_PHOTO_BYTES } from "../../lib/config";
 import { getDb } from "../../lib/db";
-import { removeFrontmatterKey } from "../../lib/frontmatter-surgery";
-import { syncOne } from "../../lib/recipe-syncer";
+import { imageBaseKey, imageKeysFor } from "../../lib/recipe-images";
 
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -34,42 +33,22 @@ async function findRecipe(slug: string) {
   return rows[0];
 }
 
-/** The .md key without extension: 'recipes/beef-chilli'. */
-function baseKey(r2Key: string): string {
-  return r2Key.replace(/\.md$/, "");
-}
-
-/** Every existing sibling image object (same basename as the .md). */
-async function siblingImageKeys(base: string): Promise<string[]> {
-  const listing = await env.RECIPES.list({ prefix: `${base}.` });
-  const suffixes = IMAGE_EXTENSIONS.map((ext) => `.${ext}`);
-  return listing.objects
-    .map((o) => o.key)
-    .filter((key) => suffixes.some((s) => key.toLowerCase().endsWith(s)));
-}
-
 /**
- * Re-parse and re-index the .md after an image change so the denormalised
- * image_key/image_etag columns stay accurate. A frontmatter `image:` path
- * would shadow uploads and deletions — drop it (same as the Laravel app).
+ * Every photo object to clear for a recipe: whatever sits at
+ * recipes/<slug>.<ext>, plus the indexed one (older recipes may keep theirs
+ * in a subfolder).
  */
-async function dropImageKeyAndResync(r2Key: string): Promise<void> {
-  const object = await env.RECIPES.get(r2Key);
-  if (object === null) return;
+async function existingPhotoKeys(recipe: { slug: string; image_key: string | null }) {
+  const keys = new Set((await imageKeysFor(env.RECIPES, recipe.slug)).map((p) => p.key));
+  if (recipe.image_key !== null) keys.add(recipe.image_key);
+  return [...keys];
+}
 
-  let contents = await object.text();
-  let etag = object.etag;
-
-  const updated = removeFrontmatterKey(contents, "image");
-  if (updated !== contents) {
-    const put = await env.RECIPES.put(r2Key, updated, {
-      httpMetadata: { contentType: "text/markdown" },
-    });
-    contents = updated;
-    etag = put!.etag;
-  }
-
-  await syncOne(getDb(env.DB), env.RECIPES, r2Key, contents, etag);
+async function setImage(recipeId: number, key: string | null, etag: string | null) {
+  await getDb(env.DB)
+    .update(recipes)
+    .set({ image: null, image_key: key, image_etag: etag })
+    .where(eq(recipes.id, recipeId));
 }
 
 // GET /recipes/:slug/image — stream the photo from R2. The URL carries
@@ -97,12 +76,11 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 export async function action({ request, params }: Route.ActionArgs) {
   const recipe = await findRecipe(params.slug);
-  const base = baseKey(recipe.r2_key);
 
   if (request.method === "DELETE") {
-    const keys = await siblingImageKeys(base);
+    const keys = await existingPhotoKeys(recipe);
     if (keys.length > 0) await env.RECIPES.delete(keys);
-    await dropImageKeyAndResync(recipe.r2_key);
+    await setImage(recipe.id, null, null);
     return { ok: true };
   }
 
@@ -124,15 +102,16 @@ export async function action({ request, params }: Route.ActionArgs) {
     return data({ errors: { photo: "The photo must be 15MB or smaller." } }, 422);
   }
 
-  // Replace whatever sibling image exists, whatever its extension.
-  const existing = await siblingImageKeys(base);
+  // Replace whatever photo exists, whatever its extension.
+  const existing = await existingPhotoKeys(recipe);
   if (existing.length > 0) await env.RECIPES.delete(existing);
 
-  await env.RECIPES.put(`${base}.${ext}`, photo.stream(), {
+  const key = `${imageBaseKey(recipe.slug)}.${ext}`;
+  const object = await env.RECIPES.put(key, photo.stream(), {
     httpMetadata: { contentType: photo.type },
   });
 
-  await dropImageKeyAndResync(recipe.r2_key);
+  await setImage(recipe.id, key, object!.etag);
 
   return { ok: true };
 }

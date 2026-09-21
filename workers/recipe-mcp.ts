@@ -1,12 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import { z } from "zod";
-import { asc, eq, isNull, sql } from "drizzle-orm";
+import { asc, eq, isNull } from "drizzle-orm";
 import schemaMd from "../recipes/SCHEMA.md?raw";
 import { recipes } from "../database/schema";
-import { RECIPES_PREFIX } from "../app/lib/config";
 import { getDb } from "../app/lib/db";
 import { createRecipe } from "../app/lib/recipe-creator";
+import { recipeToMarkdown } from "../app/lib/recipe-serializer";
+import { listKnownIngredients, loadIngredients } from "../app/lib/recipe-store";
 
 const APP_URL = "https://meal-prep.karl-w-langer.workers.dev";
 
@@ -49,18 +50,13 @@ export class RecipeMcp extends McpAgent<Env> {
           .from(recipes)
           .where(isNull(recipes.missing_at));
 
-        const ingredientRows = await db.all<{ name: string }>(sql`
-          SELECT DISTINCT je.value ->> 'name' AS name
-          FROM ${recipes}, json_each(${recipes.ingredients}) AS je
-          WHERE ${recipes.missing_at} IS NULL
-          ORDER BY name
-        `);
+        const known = await listKnownIngredients(db);
 
         const distinct = (values: (string | null)[]) =>
           [...new Set(values.filter((v): v is string => v !== null))].sort();
 
         const vocabulary = {
-          ingredient_names: ingredientRows.map((r) => r.name),
+          ingredient_names: known.map((i) => i.name),
           tags: distinct(rows.flatMap((r) => r.tags ?? [])),
           types: distinct(rows.map((r) => r.type)),
           proteins: distinct(rows.map((r) => r.protein)),
@@ -83,11 +79,11 @@ export class RecipeMcp extends McpAgent<Env> {
       "create_recipe",
       {
         description:
-          "Create a new recipe from a complete .md file (YAML frontmatter + markdown body, per get_recipe_context's schema). Returns the recipe URL, or a validation error message you should fix and retry.",
+          "Create a new recipe from a complete recipe document (YAML frontmatter + markdown body, per get_recipe_context's schema). Returns the recipe URL, or a validation error message you should fix and retry.",
         inputSchema: {
           content: z
             .string()
-            .describe("Full recipe file: YAML frontmatter + markdown body"),
+            .describe("Full recipe document: YAML frontmatter + markdown body"),
         },
       },
       async ({ content }) => {
@@ -133,24 +129,24 @@ export class RecipeMcp extends McpAgent<Env> {
     this.server.registerTool(
       "get_recipe",
       {
-        description: "Fetch a recipe's full .md file content by slug.",
+        description:
+          "Fetch a recipe by slug, rendered in the same format create_recipe accepts.",
         inputSchema: { slug: z.string() },
       },
       async ({ slug }) => {
         const rows = await db
-          .select({ r2_key: recipes.r2_key })
+          .select()
           .from(recipes)
           .where(eq(recipes.slug, slug))
           .limit(1);
 
-        const key = rows[0]?.r2_key ?? `${RECIPES_PREFIX}${slug}.md`;
-        const object = await this.env.RECIPES.get(key);
-
-        if (object === null) {
+        if (!rows[0]) {
           return errorText(`No recipe found with slug "${slug}".`);
         }
 
-        return text(await object.text());
+        return text(
+          recipeToMarkdown(rows[0], await loadIngredients(db, rows[0].id)),
+        );
       },
     );
   }

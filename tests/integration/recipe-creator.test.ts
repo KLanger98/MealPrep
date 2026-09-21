@@ -5,6 +5,7 @@ import { recipes } from "../../database/schema";
 import { MAX_RECIPE_FILE_CHARS } from "../../app/lib/config";
 import { getDb } from "../../app/lib/db";
 import { createRecipe } from "../../app/lib/recipe-creator";
+import { loadIngredients } from "../../app/lib/recipe-store";
 
 const db = getDb(env.DB);
 
@@ -22,11 +23,11 @@ ingredients:
 Assemble.`;
 
 describe("createRecipe", () => {
-  it("creates the R2 object and D1 row", async () => {
+  it("stores the recipe in D1 and writes no file", async () => {
     const result = await createRecipe(db, env.RECIPES, VALID);
 
     expect(result).toEqual({ ok: true, slug: "test-tacos", warnings: [] });
-    expect(await env.RECIPES.head("recipes/test-tacos.md")).not.toBeNull();
+    expect((await env.RECIPES.list()).objects).toHaveLength(0);
 
     const rows = await db
       .select()
@@ -34,7 +35,17 @@ describe("createRecipe", () => {
       .where(eq(recipes.slug, "test-tacos"));
     expect(rows).toHaveLength(1);
     expect(rows[0].title).toBe("Test Tacos");
-    expect(rows[0].ingredients[0].name).toBe("tortillas");
+    expect(await loadIngredients(db, rows[0].id)).toMatchObject([
+      { name: "tortillas", quantity: 4, unit: "whole" },
+    ]);
+  });
+
+  it("picks up a photo already in the bucket", async () => {
+    await env.RECIPES.put("recipes/test-tacos.jpg", "jpeg-bytes");
+    await createRecipe(db, env.RECIPES, VALID);
+
+    const [row] = await db.select().from(recipes).where(eq(recipes.slug, "test-tacos"));
+    expect(row.image_key).toBe("recipes/test-tacos.jpg");
   });
 
   it("propagates parser warnings", async () => {
@@ -71,8 +82,8 @@ describe("createRecipe", () => {
       error: 'A recipe with the slug "test-tacos" already exists.',
     });
 
-    const object = await env.RECIPES.get("recipes/test-tacos.md");
-    expect(await object!.text()).toContain("title: Test Tacos");
+    const rows = await db.select().from(recipes);
+    expect(rows.map((r) => r.title)).toEqual(["Test Tacos"]);
   });
 
   it("rejects empty and oversize content", async () => {

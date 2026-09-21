@@ -1,11 +1,12 @@
 # Recipe File Schema
 
-Every recipe is a single Markdown file in this folder (subfolders are fine).
-The file starts with a YAML frontmatter block holding structured data, followed
-by the method written in plain Markdown.
+A recipe document is Markdown that starts with a YAML frontmatter block
+holding structured data, followed by the method written in plain Markdown.
+The app stores recipes in its database; this is the format it *imports* (the
+MCP `create_recipe` tool, `POST /recipes/import`) and the format `get_recipe`
+returns.
 
-**If you are an AI creating a recipe file: follow this document exactly and
-save the file as `recipes/<slug>.md`.**
+**If you are an AI creating a recipe: follow this document exactly.**
 
 ## Full example
 
@@ -55,7 +56,7 @@ Keeps 4 days refrigerated.
 | Field | Required | Notes |
 |---|---|---|
 | `title` | **yes** | Display name of the recipe. |
-| `slug` | recommended | Stable lowercase-hyphen ID, e.g. `beef-chilli`. Never change it once used — the calendar references it. Falls back to the filename if omitted. |
+| `slug` | recommended | Stable lowercase-hyphen ID, e.g. `beef-chilli`. It can't be changed after creation — URLs and the photo hang off it. Derived from the title if omitted. |
 | `type` | recommended | One of: `breakfast`, `lunch`, `dinner`, `snack`, `component` (a component is a building block like a sauce or spice mix). Defaults to `other`. |
 | `servings` | recommended | Integer. How many servings the ingredient quantities make. Used for scaling. Defaults to 1 with a warning. |
 | `protein` | optional | Main protein, freeform but be consistent: `chicken`, `beef`, `pork`, `lamb`, `fish`, `seafood`, `eggs`, `tofu`, `legumes`, `vegetarian`. |
@@ -65,7 +66,6 @@ Keeps 4 days refrigerated.
 | `prep_minutes` | optional | Integer, hands-on time. |
 | `cook_minutes` | optional | Integer, cooking time. |
 | `tags` | optional | YAML list of freeform tags, e.g. `[meal-prep-friendly, freezes-well, spicy]`. |
-| `image` | optional | Path to a photo, relative to this recipe file, e.g. `images/beef-chilli.jpg`. Usually unnecessary — see below. |
 | `ingredients` | **yes** | List of ingredient maps — see below. |
 
 Unknown extra fields are kept but ignored, so a typo like `preptime` won't
@@ -79,7 +79,7 @@ break anything — it just won't do anything.
 | `quantity` | optional | A number. Decimals (`0.5`) and fractions (`1/2`, `1 1/2`) are accepted. Omit entirely for "to taste" items — they then appear on shopping lists once, without a number, and never scale. |
 | `unit` | optional | See allowed units below. Omit for countable things only if using `whole`. |
 | `note` | optional | Prep detail shown next to the ingredient, e.g. `finely diced`, `to taste`. |
-| `category` | optional | Shopping-list aisle grouping: `produce`, `meat`, `seafood`, `dairy`, `pantry`, `frozen`, `bakery`, `other`. |
+| `category` | optional | Shopping-list aisle grouping: `produce`, `meat`, `seafood`, `dairy`, `pantry`, `frozen`, `bakery`, `other`. Stored once per ingredient: it is only used when the ingredient is new or has no category yet. |
 
 ## Units
 
@@ -97,14 +97,7 @@ the same unit across recipes where you can.
 
 ## Images
 
-The easiest way to give a recipe a photo needs no frontmatter at all: save an
-image with the **same basename as the recipe file**, in the same folder —
-`beef-chilli.md` + `beef-chilli.jpg`. Supported: `.jpg`, `.jpeg`, `.png`,
-`.webp`, `.gif` (checked in that order).
-
-Use the `image:` frontmatter field only when the file can't sit alongside
-with a matching name (e.g. a shared `images/` subfolder). The path is
-relative to the recipe file and must stay inside the recipes folder.
+Photos aren't part of the document — add one from the recipe page in the app.
 
 ## Markdown body
 

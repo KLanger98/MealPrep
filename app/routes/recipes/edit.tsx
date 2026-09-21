@@ -1,5 +1,4 @@
 import { env } from "cloudflare:workers";
-import { useState } from "react";
 import {
   data,
   Link,
@@ -11,14 +10,17 @@ import {
 import { eq } from "drizzle-orm";
 import type { Route } from "./+types/edit";
 import { recipes } from "../../../database/schema";
-import { RecipeFileEditor } from "../../components/recipe-file-editor";
-import { MAX_RECIPE_FILE_CHARS } from "../../lib/config";
+import { RecipeForm, type RecipeFormValues } from "../../components/recipe-form";
 import { getDb } from "../../lib/db";
-import { parseRecipe, RecipeParseError } from "../../lib/recipe-parser";
-import { syncOne } from "../../lib/recipe-syncer";
+import { parseRecipeForm } from "../../lib/recipe-form";
+import {
+  listKnownIngredients,
+  loadIngredients,
+  updateRecipe,
+} from "../../lib/recipe-store";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return [{ title: `Edit — ${loaderData?.recipe.title ?? "Recipe"} — Meal Prep` }];
+  return [{ title: `Edit — ${loaderData?.initial.title ?? "Recipe"} — Meal Prep` }];
 }
 
 async function findRecipe(slug: string) {
@@ -33,91 +35,72 @@ async function findRecipe(slug: string) {
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
+  const db = getDb(env.DB);
   const recipe = await findRecipe(params.slug);
-  const object = await env.RECIPES.get(recipe.r2_key);
+  const lines = await loadIngredients(db, recipe.id);
 
-  if (object === null) {
-    // The file is missing — nothing to edit until it's restored.
-    throw redirect(`/recipes/${recipe.slug}`);
-  }
+  const initial: RecipeFormValues = {
+    title: recipe.title,
+    slug: recipe.slug,
+    type: recipe.type,
+    servings: String(recipe.servings),
+    protein: recipe.protein ?? "",
+    cost: recipe.cost ?? "",
+    source: recipe.source ?? "",
+    prep_minutes: recipe.prep_minutes?.toString() ?? "",
+    cook_minutes: recipe.cook_minutes?.toString() ?? "",
+    tags: (recipe.tags ?? []).join(", "),
+    body_markdown: recipe.body_markdown ?? "",
+    ingredients: lines.map((line) => ({
+      name: line.name,
+      quantity: line.quantity?.toString() ?? "",
+      unit: line.unit ?? "",
+      note: line.note ?? "",
+      category: line.category ?? "",
+    })),
+  };
 
   return {
-    recipe: { slug: recipe.slug, title: recipe.title, file: recipe.r2_key },
-    content: await object.text(),
+    slug: recipe.slug,
+    initial,
+    knownIngredients: await listKnownIngredients(db),
   };
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
-  const db = getDb(env.DB);
   const recipe = await findRecipe(params.slug);
+  const parsed = parseRecipeForm(await request.formData(), recipe.slug);
 
-  const form = await request.formData();
-  const content = form.get("content");
-
-  if (typeof content !== "string" || content.length === 0) {
-    return data({ errors: { content: "The recipe file can't be empty." } }, 422);
-  }
-  if (content.length > MAX_RECIPE_FILE_CHARS) {
-    return data({ errors: { content: "The recipe file is too large." } }, 422);
+  if (!parsed.ok) {
+    return data({ errors: parsed.errors }, 422);
   }
 
-  let parsed;
-  try {
-    parsed = parseRecipe(content, recipe.slug);
-  } catch (e) {
-    if (e instanceof RecipeParseError) {
-      return data({ errors: { content: e.message } }, 422);
-    }
-    throw e;
-  }
-
-  // The slug is the recipe's identity — calendar assignments point at it.
-  if (parsed.data.slug !== recipe.slug) {
-    return data(
-      {
-        errors: {
-          content: `The slug can't be changed here (calendar assignments reference "${recipe.slug}"). Keep slug: ${recipe.slug}`,
-        },
-      },
-      422,
-    );
-  }
-
-  const object = await env.RECIPES.put(recipe.r2_key, content, {
-    httpMetadata: { contentType: "text/markdown" },
-  });
-  await syncOne(db, env.RECIPES, recipe.r2_key, content, object!.etag);
+  await updateRecipe(getDb(env.DB), recipe.slug, parsed.fields, parsed.ingredients);
 
   return redirect(`/recipes/${recipe.slug}`);
 }
 
 export default function EditRecipe() {
-  const { recipe, content: initialContent } = useLoaderData<typeof loader>();
+  const { slug, initial, knownIngredients } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
-  const [content, setContent] = useState(initialContent);
 
   return (
     <>
       <Link
-        to={`/recipes/${recipe.slug}`}
+        to={`/recipes/${slug}`}
         className="text-sm text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
       >
-        ← {recipe.title}
+        ← {initial.title}
       </Link>
 
-      <h1 className="mt-2 text-2xl font-semibold">Edit {recipe.title}</h1>
-      <p
-        className="mt-1 truncate text-sm text-stone-500 dark:text-stone-400"
-        title={recipe.file}
-      >
-        Editing <span className="font-mono">{recipe.file}</span>
-      </p>
+      <h1 className="mt-2 text-2xl font-semibold">Edit {initial.title}</h1>
 
-      <RecipeFileEditor
-        content={content}
-        onChange={setContent}
-        error={actionData?.errors?.content}
+      <RecipeForm
+        initial={initial}
+        knownIngredients={knownIngredients}
+        errors={actionData?.errors}
+        editingSlug={slug}
         processing={navigation.state === "submitting"}
         submitLabel="Save changes"
       />

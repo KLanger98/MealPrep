@@ -35,7 +35,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (q) {
     const like = `%${q.toLowerCase().replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
     conditions.push(
-      sql`(lower(${recipes.title}) LIKE ${like} ESCAPE '\\' OR lower(${recipes.ingredients}) LIKE ${like} ESCAPE '\\')`,
+      // Raw table names: drizzle drops the table prefix from column
+      // references in a single-table select, which would be ambiguous here.
+      sql`(lower(recipes.title) LIKE ${like} ESCAPE '\\' OR EXISTS (
+        SELECT 1 FROM recipe_ingredients ri
+        JOIN ingredients i ON i.id = ri.ingredient_id
+        WHERE ri.recipe_id = recipes.id AND i.name LIKE ${like} ESCAPE '\\'
+      ))`,
     );
   }
 
@@ -43,7 +49,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     .select()
     .from(recipes)
     .where(and(...conditions))
-    // Newest first; id breaks ties for recipes synced in the same batch.
+    // Newest first; id breaks ties for recipes created in the same batch.
     .orderBy(desc(recipes.created_at), desc(recipes.id));
 
   // Filter dropdown options come from all available recipes, not the
@@ -112,9 +118,8 @@ export default function RecipesIndex() {
         <div className="mt-16 text-center text-stone-500 dark:text-stone-400">
           <p className="text-lg font-medium">No recipes found</p>
           <p className="mt-1 text-sm">
-            Drop a <span className="font-mono">.md</span> file into the recipes
-            bucket (see <span className="font-mono">recipes/SCHEMA.md</span>)
-            and resync.
+            Add one with <span className="font-medium">New recipe</span>, or
+            clip one from a link with the recipe clipper.
           </p>
         </div>
       )}

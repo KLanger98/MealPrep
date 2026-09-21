@@ -19,7 +19,7 @@
 			"binding": "DB",
 			"database_name": "meal-prep",
 			"database_id": "e9ef7f6d-f966-4ca0-a897-e8258c57d6c9",
-			"migrations_dir": "../../migrations"
+			"migrations_dir": "migrations"
 		}
 	],
 	"r2_buckets": [

@@ -1,4 +1,3 @@
-import { env } from "cloudflare:workers";
 import {
   isRouteErrorResponse,
   Links,
@@ -7,12 +6,9 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { eq } from "drizzle-orm";
 
 import type { Route } from "./+types/root";
-import { recipeImportErrors } from "../database/schema";
 import { AppLayout } from "./components/app-layout";
-import { getDb } from "./lib/db";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -26,20 +22,6 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
   { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
 ];
-
-// Shared across all pages (the Inertia shared-props equivalent): recipe
-// files that failed to parse on the last sync, surfaced by SyncErrorBanner.
-export async function loader() {
-  const errors = await getDb(env.DB)
-    .select({
-      file: recipeImportErrors.r2_key,
-      message: recipeImportErrors.message,
-    })
-    .from(recipeImportErrors)
-    .where(eq(recipeImportErrors.level, "error"));
-
-  return { syncErrors: errors };
-}
 
 // Apply the theme before first paint to avoid a flash of the wrong mode.
 const themeScript = `(() => {

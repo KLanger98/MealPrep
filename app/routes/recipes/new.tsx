@@ -1,62 +1,72 @@
 import { env } from "cloudflare:workers";
-import { useState } from "react";
-import { data, Link, redirect, useActionData, useNavigation } from "react-router";
+import { data, Link, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
+import { eq } from "drizzle-orm";
 import type { Route } from "./+types/new";
-import { RecipeFileEditor } from "../../components/recipe-file-editor";
+import { recipes } from "../../../database/schema";
+import { RecipeForm, type RecipeFormValues } from "../../components/recipe-form";
 import { getDb } from "../../lib/db";
-import { createRecipe } from "../../lib/recipe-creator";
+import { parseRecipeForm } from "../../lib/recipe-form";
+import { probeImage } from "../../lib/recipe-images";
+import { insertRecipe, listKnownIngredients } from "../../lib/recipe-store";
 
-const TEMPLATE = `---
-title:
-slug:
-type: dinner
-servings: 4
-protein:
-cost: medium
-source:
-prep_minutes:
-cook_minutes:
-tags: []
-ingredients:
-  - name:
-    quantity:
-    unit: g
-    category:
----
-
-## Method
-
-1.
-
-## Notes
-
-`;
+const BLANK: RecipeFormValues = {
+  title: "",
+  slug: "",
+  type: "dinner",
+  servings: "4",
+  protein: "",
+  cost: "medium",
+  source: "",
+  prep_minutes: "",
+  cook_minutes: "",
+  tags: "",
+  body_markdown: "## Method\n\n1. \n\n## Notes\n\n",
+  ingredients: [],
+};
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "New recipe — Meal Prep" }];
 }
 
+export async function loader({}: Route.LoaderArgs) {
+  return { knownIngredients: await listKnownIngredients(getDb(env.DB)) };
+}
+
 export async function action({ request }: Route.ActionArgs) {
-  const form = await request.formData();
-  const content = form.get("content");
+  const db = getDb(env.DB);
+  const parsed = parseRecipeForm(await request.formData());
 
-  if (typeof content !== "string") {
-    return data({ errors: { content: "The recipe file can't be empty." } }, 422);
+  if (!parsed.ok) {
+    return data({ errors: parsed.errors }, 422);
   }
 
-  const result = await createRecipe(getDb(env.DB), env.RECIPES, content);
+  const existing = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(eq(recipes.slug, parsed.slug))
+    .limit(1);
 
-  if (!result.ok) {
-    return data({ errors: { content: result.error } }, 422);
+  if (existing.length > 0) {
+    return data(
+      { errors: { slug: `A recipe with the slug "${parsed.slug}" already exists.` } },
+      422,
+    );
   }
 
-  return redirect(`/recipes/${result.slug}`);
+  const image = await probeImage(env.RECIPES, parsed.slug);
+
+  await insertRecipe(db, parsed.slug, parsed.fields, parsed.ingredients, {
+    image_key: image?.key ?? null,
+    image_etag: image?.etag ?? null,
+  });
+
+  return redirect(`/recipes/${parsed.slug}`);
 }
 
 export default function NewRecipe() {
+  const { knownIngredients } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
-  const [content, setContent] = useState(TEMPLATE);
 
   return (
     <>
@@ -68,16 +78,11 @@ export default function NewRecipe() {
       </Link>
 
       <h1 className="mt-2 text-2xl font-semibold">New recipe</h1>
-      <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-        This creates a <span className="font-mono">.md</span> file in your
-        recipes bucket — the same thing an AI (or you, in a text editor) would
-        write.
-      </p>
 
-      <RecipeFileEditor
-        content={content}
-        onChange={setContent}
-        error={actionData?.errors?.content}
+      <RecipeForm
+        initial={BLANK}
+        knownIngredients={knownIngredients}
+        errors={actionData?.errors}
         processing={navigation.state === "submitting"}
         submitLabel="Create recipe"
       />

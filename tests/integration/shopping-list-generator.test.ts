@@ -10,6 +10,7 @@ import {
 } from "../../database/schema";
 import { eachDay } from "../../app/lib/dates";
 import { getDb } from "../../app/lib/db";
+import { insertRecipe } from "../../app/lib/recipe-store";
 import { generate } from "../../app/lib/shopping-list-generator";
 
 // Ported from tests/Feature/ShoppingListGeneratorTest.php
@@ -20,19 +21,28 @@ async function makeRecipe(
   ingredients: Ingredient[],
   servings = 4,
 ) {
-  const [row] = await db
-    .insert(recipes)
-    .values({
-      slug,
+  await insertRecipe(
+    db,
+    slug,
+    {
       title: slug.charAt(0).toUpperCase() + slug.slice(1),
       type: "dinner",
+      protein: null,
+      cost: null,
+      source: null,
+      prep_minutes: null,
+      cook_minutes: null,
       servings,
       tags: [],
-      ingredients,
-      r2_key: `recipes/${slug}.md`,
-      etag: `etag-${slug}`,
-    })
-    .returning({ id: recipes.id });
+      body_markdown: "",
+    },
+    ingredients,
+  );
+
+  const [row] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(eq(recipes.slug, slug));
 
   return row;
 }

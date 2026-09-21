@@ -1,42 +1,36 @@
 #!/usr/bin/env bash
 #
-# Upload the repo's recipes/ folder (markdown + photos) into the R2 bucket
-# and trigger a full resync so D1 indexes them.
+# Seed the app from the repo's recipes/ folder: photos go into the R2 bucket,
+# then each .md is imported into D1 through POST /recipes/import.
 #
 # Usage:
 #   ./scripts/seed.sh                     # local dev (Miniflare state)
-#   ./scripts/seed.sh --remote            # real bucket, after account setup
-#   SYNC_URL=http://localhost:5173 ./scripts/seed.sh
+#   APP_URL=http://localhost:5173 ./scripts/seed.sh
 #
-# For local seeding the dev server must be running (npm run dev) so the
-# final sync request can hit POST /sync.
+# The dev server must be running (npm run dev). Recipes whose slug already
+# exists are reported and skipped. Production recipes are created in the app
+# or by the recipe clipper, not seeded.
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-MODE="--local"
-if [[ "${1:-}" == "--remote" ]]; then
-  MODE="--remote"
-fi
-
 RECIPES_DIR="./recipes"
 BUCKET="meal-prep-recipes"
-SYNC_URL="${SYNC_URL:-http://localhost:5173}"
+APP_URL="${APP_URL:-http://localhost:5173}"
 
 shopt -s nullglob
-for f in "$RECIPES_DIR"/*.md "$RECIPES_DIR"/*.jpg "$RECIPES_DIR"/*.jpeg "$RECIPES_DIR"/*.png "$RECIPES_DIR"/*.webp "$RECIPES_DIR"/*.gif; do
+for f in "$RECIPES_DIR"/*.jpg "$RECIPES_DIR"/*.jpeg "$RECIPES_DIR"/*.png "$RECIPES_DIR"/*.webp "$RECIPES_DIR"/*.gif; do
+  name="$(basename "$f")"
+  echo "put recipes/$name"
+  npx wrangler r2 object put "$BUCKET/recipes/$name" --file "$f" --local >/dev/null
+done
+
+for f in "$RECIPES_DIR"/*.md; do
   name="$(basename "$f")"
   if [[ "$name" == "SCHEMA.md" || "$name" == "README.md" ]]; then
     continue
   fi
-  echo "put recipes/$name"
-  npx wrangler r2 object put "$BUCKET/recipes/$name" --file "$f" "$MODE" >/dev/null
+  echo "import $name"
+  curl -s -X POST "$APP_URL/recipes/import" -H "Content-Type: text/markdown" --data-binary "@$f" && echo
 done
-
-if [[ "$MODE" == "--local" ]]; then
-  echo "Triggering sync at $SYNC_URL/sync ..."
-  curl -sf -X POST "$SYNC_URL/sync" && echo
-else
-  echo "Remote objects uploaded. Hit POST /sync on the deployed app to index them."
-fi
