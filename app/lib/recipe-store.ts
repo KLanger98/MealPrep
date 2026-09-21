@@ -116,10 +116,6 @@ export async function insertRecipe(
     slug,
     ...fields,
     ...imported,
-    ingredients: cleaned,
-    // No .md file behind this recipe — see the column comment in schema.ts.
-    r2_key: "",
-    etag: "",
   });
 
   // D1 has no interactive transactions; a batch is atomic.
@@ -137,8 +133,7 @@ export async function updateRecipe(
 
   const update = db
     .update(recipes)
-    // Saving also un-hides a recipe the old R2 sync had flagged as missing.
-    .set({ ...fields, ingredients: cleaned, missing_at: null })
+    .set(fields)
     .where(eq(recipes.slug, slug));
 
   await db.batch([...upserts, update, clear, ...inserts] as unknown as [typeof update]);

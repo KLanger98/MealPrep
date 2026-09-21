@@ -108,11 +108,6 @@ function MealChip({
           {assignment.batch_range}
         </span>
       )}
-      {assignment.recipe.missing && (
-        <span className="rounded bg-red-50 px-1 text-[11px] font-normal text-red-700 dark:bg-red-950 dark:text-red-300">
-          file missing
-        </span>
-      )}
     </button>
   );
 }

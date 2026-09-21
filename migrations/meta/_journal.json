@@ -15,6 +15,13 @@
       "when": 1790027036607,
       "tag": "0001_ingredient_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790028873716,
+      "tag": "0002_drop_legacy_recipe_columns",
+      "breakpoints": true
     }
   ]
 }

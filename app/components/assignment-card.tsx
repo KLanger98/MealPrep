@@ -12,7 +12,6 @@ export interface CalendarAssignment {
     slug: string;
     title: string;
     servings: number;
-    missing: boolean;
   };
 }
 
@@ -87,14 +86,6 @@ export function AssignmentCard({
             title="This batch covers multiple days"
           >
             {assignment.batch_range}
-          </span>
-        )}
-        {assignment.recipe.missing && (
-          <span
-            className="rounded bg-red-50 px-1 text-red-700 dark:bg-red-950 dark:text-red-300"
-            title="The recipe file has been deleted or moved"
-          >
-            file missing
           </span>
         )}
       </div>

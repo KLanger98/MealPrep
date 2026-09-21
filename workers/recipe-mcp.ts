@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import { z } from "zod";
-import { asc, eq, isNull } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import schemaMd from "../recipes/SCHEMA.md?raw";
 import { recipes } from "../database/schema";
 import { getDb } from "../app/lib/db";
@@ -47,8 +47,7 @@ export class RecipeMcp extends McpAgent<Env> {
             protein: recipes.protein,
             tags: recipes.tags,
           })
-          .from(recipes)
-          .where(isNull(recipes.missing_at));
+          .from(recipes);
 
         const known = await listKnownIngredients(db);
 
@@ -119,7 +118,6 @@ export class RecipeMcp extends McpAgent<Env> {
             rating: recipes.rating,
           })
           .from(recipes)
-          .where(isNull(recipes.missing_at))
           .orderBy(asc(recipes.title));
 
         return text(JSON.stringify(rows, null, 2));

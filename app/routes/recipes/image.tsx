@@ -47,7 +47,7 @@ async function existingPhotoKeys(recipe: { slug: string; image_key: string | nul
 async function setImage(recipeId: number, key: string | null, etag: string | null) {
   await getDb(env.DB)
     .update(recipes)
-    .set({ image: null, image_key: key, image_etag: etag })
+    .set({ image_key: key, image_etag: etag })
     .where(eq(recipes.id, recipeId));
 }
 

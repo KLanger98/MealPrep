@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { useEffect, useState } from "react";
 import { useLoaderData, useNavigate, useSearchParams } from "react-router";
-import { and, asc, eq, gte, inArray, isNull, lte, max, min, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte, max, min, sql } from "drizzle-orm";
 import type { Route } from "./+types/calendar";
 import { mealAssignments, recipes } from "../../database/schema";
 import {
@@ -52,7 +52,6 @@ export async function loader({ request }: Route.LoaderArgs) {
       recipe_slug: recipes.slug,
       recipe_title: recipes.title,
       recipe_servings: recipes.servings,
-      recipe_missing_at: recipes.missing_at,
     })
     .from(mealAssignments)
     .innerJoin(recipes, eq(mealAssignments.recipe_id, recipes.id))
@@ -86,7 +85,6 @@ export async function loader({ request }: Route.LoaderArgs) {
       type: recipes.type,
     })
     .from(recipes)
-    .where(isNull(recipes.missing_at))
     .orderBy(asc(recipes.title));
 
   return {
@@ -116,7 +114,6 @@ export async function loader({ request }: Route.LoaderArgs) {
           slug: row.recipe_slug,
           title: row.recipe_title,
           servings: row.recipe_servings,
-          missing: row.recipe_missing_at !== null,
         },
       };
     }),

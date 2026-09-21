@@ -46,31 +46,17 @@ export const recipes = sqliteTable(
     cook_minutes: integer("cook_minutes"),
     servings: integer("servings").notNull().default(1),
     tags: text("tags", { mode: "json" }).$type<string[] | null>(),
-    // Legacy copy of the ingredient lines, still written so the pre-cutover
-    // code keeps working. Reads use recipe_ingredients; dropped in phase 2.
-    ingredients: text("ingredients", { mode: "json" })
-      .$type<Ingredient[]>()
-      .notNull(),
     body_markdown: text("body_markdown"),
-    // Frontmatter `image:` override path, relative to the .md object.
-    image: text("image"),
     meta: text("meta", { mode: "json" }).$type<Record<string, unknown> | null>(),
-    // Legacy .md file pointers from when R2 was the source of truth. Recipes
-    // created since the cutover hold "" here; dropped in phase 2 along with
-    // missing_at.
-    r2_key: text("r2_key").notNull(),
-    etag: text("etag").notNull(),
     // The recipe's photo object in R2, so list pages never probe the bucket.
     image_key: text("image_key"),
     image_etag: text("image_etag"),
-    missing_at: text("missing_at"),
     ...timestamps,
   },
   (table) => [
     index("recipes_type_idx").on(table.type),
     index("recipes_protein_idx").on(table.protein),
     index("recipes_cost_idx").on(table.cost),
-    index("recipes_missing_at_idx").on(table.missing_at),
   ],
 );
 
@@ -104,16 +90,6 @@ export const recipeIngredients = sqliteTable(
     index("recipe_ingredients_ingredient_idx").on(table.ingredient_id),
   ],
 );
-
-// Legacy: parse errors from the R2 sync. Unused since the cutover; dropped in
-// phase 2.
-export const recipeImportErrors = sqliteTable("recipe_import_errors", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  r2_key: text("r2_key").notNull(),
-  level: text("level").notNull().default("error"),
-  message: text("message").notNull(),
-  ...timestamps,
-});
 
 export const mealAssignments = sqliteTable(
   "meal_assignments",
@@ -171,4 +147,3 @@ export type IngredientRow = typeof ingredients.$inferSelect;
 export type MealAssignment = typeof mealAssignments.$inferSelect;
 export type ShoppingList = typeof shoppingLists.$inferSelect;
 export type ShoppingListItem = typeof shoppingListItems.$inferSelect;
-export type RecipeImportError = typeof recipeImportErrors.$inferSelect;

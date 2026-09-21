@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { and, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import { Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/index";
 import { recipes } from "../../../database/schema";
@@ -22,7 +22,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const tag = params.get("tag");
   const q = params.get("q");
 
-  const conditions: (SQL | undefined)[] = [isNull(recipes.missing_at)];
+  const conditions: (SQL | undefined)[] = [];
 
   if (type) conditions.push(eq(recipes.type, type));
   if (protein) conditions.push(eq(recipes.protein, protein));
@@ -61,8 +61,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       cost: recipes.cost,
       tags: recipes.tags,
     })
-    .from(recipes)
-    .where(isNull(recipes.missing_at));
+    .from(recipes);
 
   const distinct = (values: (string | null)[]) =>
     [...new Set(values.filter((v): v is string => v !== null))].sort();

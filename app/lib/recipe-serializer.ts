@@ -7,7 +7,7 @@ import type { Ingredient, Recipe } from "../../database/schema";
  * tool, and the basis for any future export.
  */
 export function recipeToMarkdown(
-  recipe: Omit<Recipe, "ingredients">,
+  recipe: Recipe,
   lines: Ingredient[],
 ): string {
   const matter: Record<string, unknown> = {
