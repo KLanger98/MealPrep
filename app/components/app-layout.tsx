@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router";
+import { useSwipeNavigation } from "../lib/swipe-navigation";
 import { useTheme, type Theme } from "../lib/theme";
 import { LogoMark } from "./logo";
 
@@ -10,6 +11,9 @@ const NAV_ITEMS = [
 ];
 
 // Rarely-visited pages live in the header's settings menu, not the main nav.
+// Swipe order on mobile: left-to-right as the bottom bar shows them.
+const SWIPE_PAGES = NAV_ITEMS.map((item) => item.href);
+
 const SETTINGS_ITEMS = [{ label: "People", href: "/people", icon: PeopleIcon }];
 
 const THEME_ICONS: Record<Theme, string> = { system: "◐", light: "☀️", dark: "🌙" };
@@ -139,6 +143,8 @@ function SettingsMenu() {
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { theme, cycle } = useTheme();
+  const main = useRef<HTMLElement>(null);
+  useSwipeNavigation(main, SWIPE_PAGES);
 
   return (
     <div className="min-h-screen">
@@ -183,7 +189,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 sm:px-6 sm:pb-6">
+      <main ref={main} className="mx-auto max-w-6xl px-4 py-6 pb-28 sm:px-6 sm:pb-6">
         {children}
       </main>
 
