@@ -141,6 +141,55 @@ function SettingsMenu() {
   );
 }
 
+// Floating pill of the three main pages. The active highlight is one
+// element that slides between items, so switching pages animates instead
+// of snapping.
+function MobileNav() {
+  const { pathname } = useLocation();
+  const activeIndex = NAV_ITEMS.findIndex((item) => pathname.startsWith(item.href));
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex justify-center px-4 sm:hidden"
+      aria-label="Primary"
+    >
+      <div className="relative grid grid-cols-3 rounded-full border border-stone-200 bg-paper/95 p-1 shadow-lg shadow-stone-900/10 backdrop-blur dark:border-stone-700 dark:bg-stone-900/95 dark:shadow-black/40">
+        <div
+          aria-hidden="true"
+          className={`absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-accent-50 transition-[transform,opacity] duration-300 ease-out dark:bg-accent-950 ${
+            activeIndex === -1 ? "opacity-0" : ""
+          }`}
+          style={{ transform: `translateX(${Math.max(activeIndex, 0) * 100}%)` }}
+        />
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.label}
+            to={item.href}
+            className={({ isActive }) =>
+              `relative flex w-[4.75rem] flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-colors duration-300 ${
+                isActive
+                  ? "text-accent-700 dark:text-accent-400"
+                  : "text-stone-500 dark:text-stone-400"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <item.icon
+                  className={`h-[22px] w-[22px] transition-transform duration-300 ease-out ${
+                    isActive ? "scale-110" : "scale-100"
+                  }`}
+                />
+                {item.shortLabel}
+              </>
+            )}
+          </NavLink>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { theme, cycle } = useTheme();
   const main = useRef<HTMLElement>(null);
@@ -193,43 +242,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-paper pb-[env(safe-area-inset-bottom)] sm:hidden dark:border-stone-800 dark:bg-stone-900"
-        aria-label="Primary"
-      >
-        <div className="grid grid-cols-3 px-2 py-1.5">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.href}
-              className="flex flex-col items-center gap-0.5 py-1 text-[11px] font-semibold"
-            >
-              {({ isActive }) => (
-                <>
-                  <div
-                    className={`rounded-xl p-2 transition-colors flex flex-col items-center gap-1 ${
-                      isActive
-                        ? "bg-accent-50 text-accent-700 dark:bg-accent-950 dark:text-accent-400"
-                        : "text-stone-500 dark:text-stone-400"
-                    }`}
-                  >
-                    <item.icon className="h-[22px] w-[22px]" />
-                  <span
-                    className={
-                        isActive
-                        ? "text-accent-700 dark:text-accent-400"
-                        : "text-stone-500 dark:text-stone-400"
-                    }
-                    >
-                    {item.shortLabel}
-                  </span>
-                </div>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
+      <MobileNav />
     </div>
   );
 }
