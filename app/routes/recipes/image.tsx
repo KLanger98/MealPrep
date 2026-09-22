@@ -5,14 +5,11 @@ import type { Route } from "./+types/image";
 import { recipes } from "../../../database/schema";
 import { MAX_PHOTO_BYTES } from "../../lib/config";
 import { getDb } from "../../lib/db";
-import { imageBaseKey, imageKeysFor } from "../../lib/recipe-images";
-
-const MIME_TO_EXT: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
-};
+import {
+  clearRecipeImage,
+  MIME_TO_EXT,
+  replaceRecipeImage,
+} from "../../lib/recipe-images";
 
 const EXT_TO_MIME: Record<string, string> = {
   jpg: "image/jpeg",
@@ -31,24 +28,6 @@ async function findRecipe(slug: string) {
 
   if (!rows[0]) throw data(null, 404);
   return rows[0];
-}
-
-/**
- * Every photo object to clear for a recipe: whatever sits at
- * recipes/<slug>.<ext>, plus the indexed one (older recipes may keep theirs
- * in a subfolder).
- */
-async function existingPhotoKeys(recipe: { slug: string; image_key: string | null }) {
-  const keys = new Set((await imageKeysFor(env.RECIPES, recipe.slug)).map((p) => p.key));
-  if (recipe.image_key !== null) keys.add(recipe.image_key);
-  return [...keys];
-}
-
-async function setImage(recipeId: number, key: string | null, etag: string | null) {
-  await getDb(env.DB)
-    .update(recipes)
-    .set({ image_key: key, image_etag: etag })
-    .where(eq(recipes.id, recipeId));
 }
 
 // GET /recipes/:slug/image — stream the photo from R2. The URL carries
@@ -78,9 +57,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const recipe = await findRecipe(params.slug);
 
   if (request.method === "DELETE") {
-    const keys = await existingPhotoKeys(recipe);
-    if (keys.length > 0) await env.RECIPES.delete(keys);
-    await setImage(recipe.id, null, null);
+    await clearRecipeImage(getDb(env.DB), env.RECIPES, recipe);
     return { ok: true };
   }
 
@@ -91,8 +68,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     return data({ errors: { photo: "Choose an image file to upload." } }, 422);
   }
 
-  const ext = MIME_TO_EXT[photo.type];
-  if (!ext) {
+  if (!MIME_TO_EXT[photo.type]) {
     return data(
       { errors: { photo: "The photo must be a JPEG, PNG, WebP or GIF." } },
       422,
@@ -102,16 +78,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     return data({ errors: { photo: "The photo must be 15MB or smaller." } }, 422);
   }
 
-  // Replace whatever photo exists, whatever its extension.
-  const existing = await existingPhotoKeys(recipe);
-  if (existing.length > 0) await env.RECIPES.delete(existing);
-
-  const key = `${imageBaseKey(recipe.slug)}.${ext}`;
-  const object = await env.RECIPES.put(key, photo.stream(), {
-    httpMetadata: { contentType: photo.type },
-  });
-
-  await setImage(recipe.id, key, object!.etag);
+  await replaceRecipeImage(getDb(env.DB), env.RECIPES, recipe, photo.stream(), photo.type);
 
   return { ok: true };
 }

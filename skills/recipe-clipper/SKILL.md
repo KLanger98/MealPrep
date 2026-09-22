@@ -13,6 +13,7 @@ Save a recipe into the user's meal-prep app (https://meal-prep.karl-w-langer.wor
    - URL → fetch the page and extract the recipe (title, servings, times, ingredients with quantities, method steps). Ignore ads, life stories, and comment sections.
    - Screenshot or photo → transcribe the recipe exactly from the image. If parts are cut off or illegible, ask the user rather than inventing quantities.
    - Record the source: the URL, or the literal string `photo` for images.
+   - URL only: also note the page's **hero photo of the finished dish** — usually the `og:image` meta tag, or the largest photo in the recipe card. Skip logos, ad images, step-by-step shots and anything under ~400px. Photos and screenshots have no hero image; leave it out.
 
 2. **Call `get_recipe_context` first — always.** It returns the recipe file schema (SCHEMA.md) and the collection's existing vocabulary. Then:
    - **Reuse existing ingredient names verbatim.** Shopping lists merge by exact name — if the vocabulary has `spring onions`, never write `scallions`; if it has `chicken thighs`, don't write `chicken thigh fillets`.
@@ -28,7 +29,8 @@ Save a recipe into the user's meal-prep app (https://meal-prep.karl-w-langer.wor
    - Body: `## Method` with numbered steps, `## Notes` for storage/reheating tips if the source has them.
    - Do not include `rating` or `image`.
 
-4. **Call `create_recipe`** with the complete file as `content`.
+4. **Call `create_recipe`** with the complete file as `content`, plus `image_url` when you found a hero photo (JPEG/PNG/WebP/GIF under 5MB).
+   - A `Photo not saved: …` warning means the recipe was created without a photo — mention it, don't retry the whole recipe. If you can see a different usable image URL, call `set_recipe_image` with it.
    - On a validation error, read the message, fix the file, and retry (up to 3 attempts).
    - On a duplicate-slug error, check with `get_recipe` whether it's genuinely the same recipe — if so tell the user it already exists; if it's a different recipe, pick a distinguishing slug (e.g. `beef-chilli-slow-cooker`).
 

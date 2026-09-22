@@ -6,6 +6,7 @@ import schemaMd from "../recipes/SCHEMA.md?raw";
 import { recipes } from "../database/schema";
 import { getDb } from "../app/lib/db";
 import { createRecipe } from "../app/lib/recipe-creator";
+import { importRecipeImage } from "../app/lib/recipe-images";
 import { recipeToMarkdown } from "../app/lib/recipe-serializer";
 import { listKnownIngredients, loadIngredients } from "../app/lib/recipe-store";
 
@@ -27,10 +28,19 @@ const errorText = (value: string) => ({
  * recipe-clipper skill; these tools validate and persist.
  */
 export class RecipeMcp extends McpAgent<Env> {
-  server = new McpServer({ name: "meal-prep", version: "1.0.0" });
+  server = new McpServer({ name: "meal-prep", version: "1.1.0" });
 
   async init() {
     const db = getDb(this.env.DB);
+
+    const findImageTarget = async (slug: string) => {
+      const [row] = await db
+        .select({ id: recipes.id, slug: recipes.slug, image_key: recipes.image_key })
+        .from(recipes)
+        .where(eq(recipes.slug, slug))
+        .limit(1);
+      return row;
+    };
 
     this.server.registerTool(
       "get_recipe_context",
@@ -78,27 +88,84 @@ export class RecipeMcp extends McpAgent<Env> {
       "create_recipe",
       {
         description:
-          "Create a new recipe from a complete recipe document (YAML frontmatter + markdown body, per get_recipe_context's schema). Returns the recipe URL, or a validation error message you should fix and retry.",
+          "Create a new recipe from a complete recipe document (YAML frontmatter + markdown body, per get_recipe_context's schema). Optionally fetches the dish's photo from image_url. Returns the recipe URL, or a validation error message you should fix and retry.",
         inputSchema: {
           content: z
             .string()
             .describe("Full recipe document: YAML frontmatter + markdown body"),
+          image_url: z
+            .string()
+            .url()
+            .optional()
+            .describe(
+              "Public URL of a photo of the finished dish (e.g. the page's og:image). JPEG/PNG/WebP/GIF, under 5MB.",
+            ),
         },
       },
-      async ({ content }) => {
+      async ({ content, image_url }) => {
         const result = await createRecipe(db, this.env.RECIPES, content);
 
         if (!result.ok) {
           return errorText(result.error);
         }
 
+        // The recipe is saved either way; a photo that won't fetch is only
+        // a warning.
+        const warnings = [...result.warnings];
+        let image: string | null = null;
+
+        if (image_url) {
+          const imported = await importRecipeImage(
+            db,
+            this.env.RECIPES,
+            await findImageTarget(result.slug),
+            image_url,
+          );
+          if (imported.ok) {
+            image = `${APP_URL}/recipes/${result.slug}/image`;
+          } else {
+            warnings.push(`Photo not saved: ${imported.error}`);
+          }
+        }
+
         return text(
           JSON.stringify({
             slug: result.slug,
             url: `${APP_URL}/recipes/${result.slug}`,
-            warnings: result.warnings,
+            image,
+            warnings,
           }),
         );
+      },
+    );
+
+    this.server.registerTool(
+      "set_recipe_image",
+      {
+        description:
+          "Fetch a photo from a public URL and make it an existing recipe's photo, replacing any current one.",
+        inputSchema: {
+          slug: z.string(),
+          image_url: z.string().url().describe("Public URL of a JPEG/PNG/WebP/GIF under 5MB"),
+        },
+      },
+      async ({ slug, image_url }) => {
+        const rows = await db
+          .select({ id: recipes.id, slug: recipes.slug, image_key: recipes.image_key })
+          .from(recipes)
+          .where(eq(recipes.slug, slug))
+          .limit(1);
+
+        if (!rows[0]) {
+          return errorText(`No recipe found with slug "${slug}".`);
+        }
+
+        const imported = await importRecipeImage(db, this.env.RECIPES, rows[0], image_url);
+        if (!imported.ok) {
+          return errorText(imported.error);
+        }
+
+        return text(JSON.stringify({ slug, image: `${APP_URL}/recipes/${slug}/image` }));
       },
     );
 
