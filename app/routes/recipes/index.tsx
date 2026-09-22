@@ -21,6 +21,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const cost = params.get("cost");
   const tag = params.get("tag");
   const q = params.get("q");
+  const sort = params.get("sort") === "cooked" ? "cooked" : "newest";
 
   const conditions: (SQL | undefined)[] = [];
 
@@ -45,12 +46,26 @@ export async function loader({ request }: Route.LoaderArgs) {
     );
   }
 
+  // Times cooked is derived from the calendar, never stored: one batch
+  // (a cook eaten over several days) counts once, and only once its first
+  // day has arrived. "Today" is UTC — a few hours late for Australia, which
+  // is fine for a badge.
+  const today = new Date().toISOString().slice(0, 10);
+  const cooked = sql<number>`(
+    SELECT count(DISTINCT batch_id) FROM meal_assignments
+    WHERE recipe_id = recipes.id AND date <= ${today}
+  )`;
+
   const rows = await db
-    .select()
+    .select({ recipe: recipes, cooked })
     .from(recipes)
     .where(and(...conditions))
-    // Newest first; id breaks ties for recipes created in the same batch.
-    .orderBy(desc(recipes.created_at), desc(recipes.id));
+    .orderBy(
+      // Newest first; id breaks ties for recipes created in the same batch.
+      ...(sort === "cooked" ? [desc(cooked)] : []),
+      desc(recipes.created_at),
+      desc(recipes.id),
+    );
 
   // Filter dropdown options come from all available recipes, not the
   // filtered set (matches the Laravel controller).
@@ -67,7 +82,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     [...new Set(values.filter((v): v is string => v !== null))].sort();
 
   return {
-    recipes: rows.map((recipe) => ({
+    recipes: rows.map(({ recipe, cooked }) => ({
+      cooked: Number(cooked),
       slug: recipe.slug,
       title: recipe.title,
       type: recipe.type,

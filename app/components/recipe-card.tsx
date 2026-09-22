@@ -16,6 +16,7 @@ export interface RecipeCardData {
   tags: string[] | null;
   rating: number | null;
   total_minutes: number | null;
+  cooked: number;
   image_url: string | null;
 }
 
@@ -67,6 +68,11 @@ export function RecipeCard({ recipe }: { recipe: RecipeCardData }) {
             {recipe.servings} {recipe.servings === 1 ? "serving" : "servings"}
           </span>
           {recipe.total_minutes && <span>{recipe.total_minutes} min</span>}
+          {recipe.cooked > 0 && (
+            <span title={`Cooked ${recipe.cooked} ${recipe.cooked === 1 ? "time" : "times"}`}>
+              🍳 ×{recipe.cooked}
+            </span>
+          )}
           {recipe.rating !== null && (
             <span className="ml-auto font-medium text-caramel-600 dark:text-caramel-400">
               ★ {recipe.rating}/10

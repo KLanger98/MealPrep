@@ -8,7 +8,7 @@ export interface FilterOptions {
   tags: string[];
 }
 
-const FILTER_KEYS = ["q", "type", "protein", "cost", "tag"] as const;
+const FILTER_KEYS = ["q", "type", "protein", "cost", "tag", "sort"] as const;
 type FilterKey = (typeof FILTER_KEYS)[number];
 
 export function FilterBar({ options }: { options: FilterOptions }) {
@@ -103,6 +103,15 @@ export function FilterBar({ options }: { options: FilterOptions }) {
         {options.tags.map((tag) => (
           <option key={tag} value={tag}>{tag}</option>
         ))}
+      </select>
+      <select
+        value={current.sort}
+        onChange={(e) => updateParams({ sort: e.target.value })}
+        className={selectClass}
+        aria-label="Sort"
+      >
+        <option value="">Newest first</option>
+        <option value="cooked">Most cooked</option>
       </select>
       {hasFilters && (
         <button
