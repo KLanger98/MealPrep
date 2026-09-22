@@ -48,3 +48,26 @@
     --color-on-primary: #2a3019;
 }
 
+
+/* iOS Safari zooms the page when a focused field's text is under 16px. This
+   sits outside any @layer on purpose: unlayered rules beat Tailwind's
+   utilities, so it wins over text-sm / text-xs on the field itself. */
+@media (pointer: coarse), (max-width: 639px) {
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+/* iOS Safari draws date inputs as native controls: its own inner padding, a
+   centred value and a shorter box. Strip that so they match text fields. */
+input[type='date'] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.375rem;
+}
+
+input[type='date']::-webkit-date-and-time-value {
+    text-align: left;
+}

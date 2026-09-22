@@ -5,8 +5,9 @@ import type { Route } from "./+types/assignments.batch";
 import { mealAssignments } from "../../database/schema";
 import { SLOTS } from "../lib/config";
 import { getDb } from "../lib/db";
+import { parsePersonIds, setBatchPeopleStatements } from "../lib/people";
 
-// PATCH: update every day in a batch (scale and/or slot) in one go.
+// PATCH: update every day in a batch (scale, slot and/or people) in one go.
 // DELETE: remove the whole batch (every day it covers).
 export async function action({ request, params }: Route.ActionArgs) {
   const db = getDb(env.DB);
@@ -37,11 +38,31 @@ export async function action({ request, params }: Route.ActionArgs) {
     updates.slot = slot;
   }
 
-  if (Object.keys(updates).length > 0) {
-    await db
-      .update(mealAssignments)
-      .set(updates)
-      .where(eq(mealAssignments.batch_id, params.batchId));
+  let personIds: number[] | null = null;
+  if (body.person_ids !== undefined) {
+    const result = await parsePersonIds(db, body.person_ids);
+    if ("error" in result) {
+      return data({ errors: { person_ids: result.error } }, 422);
+    }
+    personIds = result.ids;
+  }
+
+  const statements = [
+    ...(Object.keys(updates).length > 0
+      ? [
+          db
+            .update(mealAssignments)
+            .set(updates)
+            .where(eq(mealAssignments.batch_id, params.batchId)),
+        ]
+      : []),
+    ...(personIds !== null
+      ? setBatchPeopleStatements(db, params.batchId, personIds)
+      : []),
+  ];
+
+  if (statements.length > 0) {
+    await db.batch(statements as unknown as [(typeof statements)[number]]);
   }
 
   return { ok: true };

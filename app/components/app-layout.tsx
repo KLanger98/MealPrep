@@ -1,4 +1,5 @@
-import { Link, NavLink } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router";
 import { useTheme, type Theme } from "../lib/theme";
 import { LogoMark } from "./logo";
 
@@ -7,6 +8,9 @@ const NAV_ITEMS = [
   { label: "Calendar", shortLabel: "Calendar", href: "/calendar", icon: CalendarIcon },
   { label: "Shopping Lists", shortLabel: "Shopping", href: "/shopping-lists", icon: CartIcon },
 ];
+
+// Rarely-visited pages live in the header's settings menu, not the main nav.
+const SETTINGS_ITEMS = [{ label: "People", href: "/people", icon: PeopleIcon }];
 
 const THEME_ICONS: Record<Theme, string> = { system: "◐", light: "☀️", dark: "🌙" };
 const THEME_LABELS: Record<Theme, string> = {
@@ -43,6 +47,96 @@ function CartIcon({ className }: { className?: string }) {
   );
 }
 
+function PeopleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9" cy="8" r="4" />
+      <path d="M2 21a7 7 0 0 1 14 0" />
+      <path d="M16 4.5a4 4 0 0 1 0 7M18 14.5a7 7 0 0 1 4 6.5" />
+    </svg>
+  );
+}
+
+function GearIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+    </svg>
+  );
+}
+
+function SettingsMenu() {
+  const [open, setOpen] = useState(false);
+  const container = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const active = SETTINGS_ITEMS.some((item) => location.pathname.startsWith(item.href));
+
+  // Navigating (including via a menu item) closes the menu.
+  useEffect(() => setOpen(false), [location.pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointerDown(event: PointerEvent) {
+      if (!container.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={container} className="relative">
+      <button
+        type="button"
+        className={`rounded-md p-1.5 hover:bg-stone-100 dark:hover:bg-stone-800 ${
+          active
+            ? "text-accent-700 dark:text-accent-400"
+            : "text-stone-500 dark:text-stone-400"
+        }`}
+        aria-label="Settings"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <GearIcon className="size-5" />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-stone-200 bg-paper p-1 shadow-lg dark:border-stone-700 dark:bg-stone-900"
+        >
+          {SETTINGS_ITEMS.map((item) => (
+            <NavLink
+              key={item.href}
+              to={item.href}
+              role="menuitem"
+              className={({ isActive }) =>
+                `flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+                  isActive
+                    ? "bg-accent-50 font-medium text-accent-800 dark:bg-accent-950 dark:text-accent-300"
+                    : "text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
+                }`
+              }
+            >
+              <item.icon className="size-4" />
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { theme, cycle } = useTheme();
 
@@ -74,15 +168,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </NavLink>
             ))}
           </nav>
-          <button
-            type="button"
-            className="ml-auto rounded-md px-2 py-1 text-sm text-stone-500 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
-            title={THEME_LABELS[theme]}
-            aria-label={THEME_LABELS[theme]}
-            onClick={cycle}
-          >
-            {THEME_ICONS[theme]}
-          </button>
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              className="rounded-md px-2 py-1 text-sm text-stone-500 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
+              title={THEME_LABELS[theme]}
+              aria-label={THEME_LABELS[theme]}
+              onClick={cycle}
+            >
+              {THEME_ICONS[theme]}
+            </button>
+            <SettingsMenu />
+          </div>
         </div>
       </header>
 

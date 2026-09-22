@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  primaryKey,
   real,
   sqliteTable,
   text,
@@ -110,6 +111,32 @@ export const mealAssignments = sqliteTable(
   ],
 );
 
+// The household. Everyone shares one login; people exist so meals can be
+// assigned to whoever is eating them, not for authentication.
+export const people = sqliteTable("people", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  ...timestamps,
+});
+
+// Who is eating a given day of a batch. Stored per day (not per batch) so
+// removing a day cleans up after itself; the UI edits a whole batch at once.
+export const mealAssignmentPeople = sqliteTable(
+  "meal_assignment_people",
+  {
+    assignment_id: integer("assignment_id")
+      .notNull()
+      .references(() => mealAssignments.id, { onDelete: "cascade" }),
+    person_id: integer("person_id")
+      .notNull()
+      .references(() => people.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.assignment_id, table.person_id] }),
+    index("meal_assignment_people_person_idx").on(table.person_id),
+  ],
+);
+
 export const shoppingLists = sqliteTable("shopping_lists", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name"),
@@ -145,5 +172,6 @@ export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 export type IngredientRow = typeof ingredients.$inferSelect;
 export type MealAssignment = typeof mealAssignments.$inferSelect;
+export type Person = typeof people.$inferSelect;
 export type ShoppingList = typeof shoppingLists.$inferSelect;
 export type ShoppingListItem = typeof shoppingListItems.$inferSelect;

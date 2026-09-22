@@ -12,6 +12,7 @@ export default [
   route("assignments", "routes/assignments.tsx"),
   route("assignments/batch/:batchId", "routes/assignments.batch.tsx"),
   route("assignments/:id", "routes/assignments.day.tsx"),
+  route("people", "routes/people.tsx"),
   route("shopping-lists", "routes/shopping-lists/index.tsx"),
   route("shopping-lists/:id", "routes/shopping-lists/show.tsx"),
 ] satisfies RouteConfig;

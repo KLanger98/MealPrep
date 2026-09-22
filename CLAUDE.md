@@ -3,8 +3,10 @@
 React Router 8 (framework mode) on Cloudflare Workers, deployed at
 https://meal-prep.karl-w-langer.workers.dev. The `meal-prep` D1 database is
 the source of truth for everything: recipes, a canonical `ingredients` table
-joined to recipes through `recipe_ingredients`, meal plans and shopping
-lists. The `meal-prep-recipes` R2 bucket only holds recipe photos
+joined to recipes through `recipe_ingredients`, meal plans, shopping lists,
+and the household's `people` (assigned to meals through
+`meal_assignment_people`; everyone shares the one login — people are data,
+not accounts). The `meal-prep-recipes` R2 bucket only holds recipe photos
 (`recipes/<slug>.<ext>`). Markdown with YAML frontmatter survives purely as
 an *input format*: the MCP `create_recipe` tool and `POST /recipes/import`
 parse it into rows. The `recipes/` folder in this repo seeds local dev.

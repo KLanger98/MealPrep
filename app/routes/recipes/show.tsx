@@ -19,6 +19,7 @@ import { SLOTS } from "../../lib/config";
 import { getDb } from "../../lib/db";
 import { renderMarkdown } from "../../lib/markdown";
 import { imageKeysFor } from "../../lib/recipe-images";
+import { listPeople } from "../../lib/people";
 import { loadIngredients } from "../../lib/recipe-store";
 import { prepareUpload } from "../../lib/photo-resize";
 import { recipeImageUrl } from "../../lib/urls";
@@ -39,6 +40,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   if (!recipe) throw data(null, 404);
 
   return {
+    people: await listPeople(db),
     recipe: {
       id: recipe.id,
       slug: recipe.slug,
@@ -102,7 +104,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function ShowRecipe() {
-  const { recipe } = useLoaderData<typeof loader>();
+  const { recipe, people } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const rate = useFetcher();
   const photo = useFetcher<{ errors?: { photo?: string } }>();
@@ -372,6 +374,7 @@ export default function ShowRecipe() {
       {planning && (
         <AssignmentModal
           recipes={[recipeOption]}
+          people={people}
           slots={[...SLOTS]}
           context={{ recipe: recipeOption }}
           onClose={() => setPlanning(false)}

@@ -1,4 +1,5 @@
 import { Link, useFetcher } from "react-router";
+import type { PersonOption } from "../lib/people";
 
 export interface CalendarAssignment {
   id: number;
@@ -13,6 +14,25 @@ export interface CalendarAssignment {
     title: string;
     servings: number;
   };
+  people: PersonOption[];
+}
+
+/** Who's eating: a compact row of first names. */
+export function PeopleBadges({ people }: { people: PersonOption[] }) {
+  if (people.length === 0) return null;
+
+  return (
+    <>
+      {people.map((person) => (
+        <span
+          key={person.id}
+          className="rounded bg-caramel-300/40 px-1 text-[11px] font-normal text-caramel-600 dark:bg-caramel-600/30 dark:text-caramel-300"
+        >
+          {person.name}
+        </span>
+      ))}
+    </>
+  );
 }
 
 export interface RecipeOption {
@@ -88,6 +108,7 @@ export function AssignmentCard({
             {assignment.batch_range}
           </span>
         )}
+        <PeopleBadges people={assignment.people} />
       </div>
 
       <div className="mt-1 hidden gap-2 group-hover:flex pointer-coarse:flex">

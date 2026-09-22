@@ -23,6 +23,7 @@ import {
   weekdayShort,
 } from "../lib/dates";
 import { getDb } from "../lib/db";
+import { listPeople, loadPeopleFor } from "../lib/people";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Calendar — Meal Prep" }];
@@ -87,6 +88,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     .from(recipes)
     .orderBy(asc(recipes.title));
 
+  const peopleByAssignment = await loadPeopleFor(
+    db,
+    rows.map((row) => row.id),
+  );
+
   return {
     weekStart: start,
     weekLabel: `${formatDayMonth(start)} – ${formatDayMonthYear(end)}`,
@@ -115,14 +121,16 @@ export async function loader({ request }: Route.LoaderArgs) {
           title: row.recipe_title,
           servings: row.recipe_servings,
         },
+        people: peopleByAssignment.get(row.id) ?? [],
       };
     }),
     recipeOptions,
+    people: await listPeople(db),
   };
 }
 
 export default function Calendar() {
-  const { weekStart, weekLabel, days, slots, assignments, recipeOptions } =
+  const { weekStart, weekLabel, days, slots, assignments, recipeOptions, people } =
     useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -385,6 +393,7 @@ export default function Calendar() {
       {modalContext && (
         <AssignmentModal
           recipes={recipeOptions}
+          people={people}
           slots={slots}
           context={modalContext}
           onClose={() => setModalContext(null)}

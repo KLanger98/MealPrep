@@ -1,4 +1,4 @@
-import type { CalendarAssignment } from "./assignment-card";
+import { PeopleBadges, type CalendarAssignment } from "./assignment-card";
 
 interface WeekListProps {
   days: { date: string; dayName: string; dayNumber: string }[];
@@ -108,6 +108,7 @@ function MealChip({
           {assignment.batch_range}
         </span>
       )}
+      <PeopleBadges people={assignment.people} />
     </button>
   );
 }

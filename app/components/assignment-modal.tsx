@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import { localToday, weekdayShort } from "../lib/dates";
+import type { PersonOption } from "../lib/people";
 import type { CalendarAssignment, RecipeOption } from "./assignment-card";
 
 // Prefill for a new assignment: { date, slot } from the calendar, or
@@ -13,16 +14,19 @@ export interface ModalContext {
 }
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-stone-300 px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-950";
+  "mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950";
 
 // Mounted only while open, so all state initialises from `context`.
 export function AssignmentModal({
   recipes,
+  people,
   slots,
   context,
   onClose,
 }: {
   recipes: RecipeOption[];
+  /** The household; the picker is hidden while it's empty. */
+  people: PersonOption[];
   slots: string[];
   context: ModalContext;
   onClose: () => void;
@@ -40,8 +44,25 @@ export function AssignmentModal({
   );
   const [startDate, setStartDate] = useState(context.date ?? localToday());
   const [endDate, setEndDate] = useState(context.date ?? localToday());
-  const [scaleFactor, setScaleFactor] = useState(editing?.scale_factor ?? 1);
+  // The raw text, so the field can be emptied or half-typed ("0.") mid-edit.
+  // It only has to be a valid number by the time the form is saved.
+  const [scaleInput, setScaleInput] = useState(String(editing?.scale_factor ?? 1));
+  const [scaleError, setScaleError] = useState<string | null>(null);
+  const parsedScale = scaleInput.trim() === "" ? NaN : Number(scaleInput);
+  const scaleFactor =
+    Number.isFinite(parsedScale) && parsedScale >= 0.1 && parsedScale <= 20
+      ? parsedScale
+      : null;
   const [search, setSearch] = useState("");
+  const [personIds, setPersonIds] = useState<number[]>(
+    editing?.people.map((person) => person.id) ?? [],
+  );
+
+  function togglePerson(id: number) {
+    setPersonIds((current) =>
+      current.includes(id) ? current.filter((p) => p !== id) : [...current, id],
+    );
+  }
 
   const submitting = fetcher.state !== "idle";
 
@@ -55,7 +76,7 @@ export function AssignmentModal({
     : recipes;
 
   const selectedRecipe = presetRecipe ?? recipes.find((r) => r.id === recipeId);
-  const totalServings = selectedRecipe
+  const totalServings = selectedRecipe && scaleFactor !== null
     ? Math.round(selectedRecipe.servings * scaleFactor * 100) / 100
     : null;
 
@@ -71,9 +92,14 @@ export function AssignmentModal({
   function submit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (scaleFactor === null) {
+      setScaleError("Scale must be a number between 0.1 and 20.");
+      return;
+    }
+
     if (editing) {
       fetcher.submit(
-        { scale_factor: scaleFactor, slot },
+        { scale_factor: scaleFactor, slot, person_ids: personIds },
         {
           method: "patch",
           action: `/assignments/batch/${editing.batch_id}`,
@@ -90,6 +116,7 @@ export function AssignmentModal({
         start_date: startDate,
         end_date: endDate,
         scale_factor: scaleFactor,
+        person_ids: personIds,
       },
       { method: "post", action: "/assignments", encType: "application/json" },
     );
@@ -102,7 +129,7 @@ export function AssignmentModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-t-2xl bg-paper p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-xl sm:pb-5 dark:bg-stone-900">
+      <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-paper p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-xl sm:pb-5 dark:bg-stone-900">
         <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-stone-200 sm:hidden dark:bg-stone-700" />
         <h2 className="text-lg font-semibold">
           {editing ? `Edit batch — ${editing.recipe.title}` : "Add to calendar"}
@@ -124,7 +151,7 @@ export function AssignmentModal({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search…"
-                className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-950"
+                className={inputClass}
               />
               <div className="mt-2 max-h-40 space-y-1 overflow-y-auto rounded-lg border border-stone-200 p-1 dark:border-stone-700">
                 {filteredRecipes.map((recipe) => (
@@ -175,8 +202,41 @@ export function AssignmentModal({
             </div>
           </div>
 
+          {people.length > 0 && (
+            <div>
+              <span className="block text-sm font-medium text-stone-700 dark:text-stone-300">
+                Who's eating
+              </span>
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {people.map((person) => {
+                  const selected = personIds.includes(person.id);
+                  return (
+                    <button
+                      key={person.id}
+                      type="button"
+                      aria-pressed={selected}
+                      className={`rounded-full border px-3 py-1 text-sm ${
+                        selected
+                          ? "border-accent-300 bg-accent-50 font-medium text-accent-800 dark:border-accent-900 dark:bg-accent-950 dark:text-accent-300"
+                          : "border-stone-300 text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+                      }`}
+                      onClick={() => togglePerson(person.id)}
+                    >
+                      {person.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {editing && editing.batch_days > 1 && (
+                <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+                  Applies to all {editing.batch_days} days of this batch.
+                </p>
+              )}
+            </div>
+          )}
+
           {!editing && (
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <label className="flex-1 text-sm font-medium text-stone-700 dark:text-stone-300">
                 From
                 <input
@@ -208,8 +268,11 @@ export function AssignmentModal({
               min={0.1}
               max={20}
               step="any"
-              value={scaleFactor}
-              onChange={(e) => setScaleFactor(Number(e.target.value))}
+              value={scaleInput}
+              onChange={(e) => {
+                setScaleInput(e.target.value);
+                setScaleError(null);
+              }}
               className={inputClass}
             />
           </label>
@@ -219,6 +282,10 @@ export function AssignmentModal({
               Makes {totalServings} servings ({selectedRecipe!.servings} ×{" "}
               {scaleFactor}).
             </p>
+          )}
+
+          {scaleError && (
+            <p className="text-xs text-red-600 dark:text-red-400">{scaleError}</p>
           )}
 
           {fetcher.data?.errors && (

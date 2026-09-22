@@ -6,6 +6,7 @@ import { mealAssignments, recipes } from "../../database/schema";
 import { SLOTS } from "../lib/config";
 import { eachDay, isValidDate } from "../lib/dates";
 import { getDb } from "../lib/db";
+import { parsePersonIds, setBatchPeopleStatements } from "../lib/people";
 
 // POST /assignments — assign a recipe to a slot across a date range: one row
 // per day, linked by a shared batch_id (a batch = one cook of the recipe).
@@ -44,7 +45,10 @@ export async function action({ request }: Route.ActionArgs) {
     errors.scale_factor = "Scale must be between 0.1 and 20.";
   }
 
-  if (Object.keys(errors).length > 0) {
+  const peopleResult = await parsePersonIds(db, body.person_ids);
+  if ("error" in peopleResult) errors.person_ids = peopleResult.error;
+
+  if (Object.keys(errors).length > 0 || "error" in peopleResult) {
     return data({ errors }, 422);
   }
 
@@ -59,7 +63,11 @@ export async function action({ request }: Route.ActionArgs) {
     }),
   );
 
-  await db.batch(inserts as [(typeof inserts)[number]]);
+  // The people statements select the days just inserted, so order matters.
+  await db.batch([
+    ...inserts,
+    ...setBatchPeopleStatements(db, batchId, peopleResult.ids),
+  ] as unknown as [(typeof inserts)[number]]);
 
   return { ok: true };
 }

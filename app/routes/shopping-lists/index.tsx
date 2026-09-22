@@ -125,7 +125,7 @@ export default function ShoppingListsIndex() {
   }
 
   const inputClass =
-    "mt-1 block rounded-lg border border-stone-300 px-2 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-950";
+    "mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950";
 
   return (
     <>
@@ -135,7 +135,7 @@ export default function ShoppingListsIndex() {
         method="post"
         className="mt-4 flex flex-col md:flex-wrap   flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-paper p-4 dark:border-stone-800 dark:bg-stone-900"
       >
-        <div className="w-full flex gap-4">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:gap-4">
             <label className=" text-sm font-medium text-stone-700 dark:text-stone-300 w-full">
             From
             <input
@@ -169,7 +169,7 @@ export default function ShoppingListsIndex() {
             type="text"
             name="name"
             placeholder="e.g. Week 28 shop"
-            className={`${inputClass} w-full`}
+            className={inputClass}
           />
         </label>
         <button
