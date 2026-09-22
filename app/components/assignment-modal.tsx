@@ -13,6 +13,9 @@ export interface ModalContext {
   assignment?: CalendarAssignment;
 }
 
+const formatServings = (n: number) => String(Math.round(n * 100) / 100);
+const formatScale = (n: number) => String(Math.round(n * 100) / 100);
+
 const inputClass =
   "mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950";
 
@@ -44,15 +47,6 @@ export function AssignmentModal({
   );
   const [startDate, setStartDate] = useState(context.date ?? localToday());
   const [endDate, setEndDate] = useState(context.date ?? localToday());
-  // The raw text, so the field can be emptied or half-typed ("0.") mid-edit.
-  // It only has to be a valid number by the time the form is saved.
-  const [scaleInput, setScaleInput] = useState(String(editing?.scale_factor ?? 1));
-  const [scaleError, setScaleError] = useState<string | null>(null);
-  const parsedScale = scaleInput.trim() === "" ? NaN : Number(scaleInput);
-  const scaleFactor =
-    Number.isFinite(parsedScale) && parsedScale >= 0.1 && parsedScale <= 20
-      ? parsedScale
-      : null;
   const [search, setSearch] = useState("");
   const [personIds, setPersonIds] = useState<number[]>(
     editing?.people.map((person) => person.id) ?? [],
@@ -76,9 +70,27 @@ export function AssignmentModal({
     : recipes;
 
   const selectedRecipe = presetRecipe ?? recipes.find((r) => r.id === recipeId);
-  const totalServings = selectedRecipe && scaleFactor !== null
-    ? Math.round(selectedRecipe.servings * scaleFactor * 100) / 100
-    : null;
+  // What the servings are measured against: the batch's recipe when
+  // editing (it isn't in the picker), otherwise whatever's picked.
+  const baseRecipe = editing?.recipe ?? selectedRecipe;
+
+  // You think in servings ("cook 6"); the row stores a scale factor
+  // (6 / recipe's 4 = 1.5). Held as raw text so it can be emptied or
+  // half-typed mid-edit; it only has to be valid by save time. Until you
+  // touch it, it follows the picked recipe's own servings.
+  const [servingsInput, setServingsInput] = useState(
+    editing ? formatServings(editing.recipe.servings * editing.scale_factor) : "",
+  );
+  const [servingsTouched, setServingsTouched] = useState(editing !== undefined);
+  const [servingsError, setServingsError] = useState<string | null>(null);
+  const servingsText =
+    servingsTouched || !baseRecipe ? servingsInput : String(baseRecipe.servings);
+  const parsedServings = servingsText.trim() === "" ? NaN : Number(servingsText);
+  const scaleFactor =
+    baseRecipe && Number.isFinite(parsedServings) && parsedServings > 0
+      ? Math.round((parsedServings / baseRecipe.servings) * 1000) / 1000
+      : null;
+  const scaleInRange = scaleFactor !== null && scaleFactor >= 0.1 && scaleFactor <= 20;
 
   // "one cook, eaten Wed–Fri" — the submit button carries the batch
   // semantics instead of an explanatory paragraph.
@@ -92,8 +104,11 @@ export function AssignmentModal({
   function submit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (scaleFactor === null) {
-      setScaleError("Scale must be a number between 0.1 and 20.");
+    if (!baseRecipe) return;
+    if (scaleFactor === null || !scaleInRange) {
+      const min = formatServings(baseRecipe.servings * 0.1);
+      const max = formatServings(baseRecipe.servings * 20);
+      setServingsError(`Servings must be a number between ${min} and ${max}.`);
       return;
     }
 
@@ -262,30 +277,34 @@ export function AssignmentModal({
           )}
 
           <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">
-            Scale
+            Servings to cook
             <input
               type="number"
-              min={0.1}
-              max={20}
+              min={0}
               step="any"
-              value={scaleInput}
+              inputMode="decimal"
+              value={servingsText}
+              placeholder={baseRecipe ? String(baseRecipe.servings) : "Pick a recipe first"}
+              disabled={!baseRecipe}
               onChange={(e) => {
-                setScaleInput(e.target.value);
-                setScaleError(null);
+                setServingsInput(e.target.value);
+                setServingsTouched(true);
+                setServingsError(null);
               }}
-              className={inputClass}
+              className={`${inputClass} disabled:opacity-50`}
             />
           </label>
 
-          {totalServings !== null && (
+          {baseRecipe && scaleFactor !== null && scaleInRange && (
             <p className="text-xs text-stone-500 dark:text-stone-400">
-              Makes {totalServings} servings ({selectedRecipe!.servings} ×{" "}
-              {scaleFactor}).
+              {scaleFactor === 1
+                ? `The recipe as written (${baseRecipe.servings} servings).`
+                : `${formatScale(scaleFactor)}× the recipe (written for ${baseRecipe.servings}).`}
             </p>
           )}
 
-          {scaleError && (
-            <p className="text-xs text-red-600 dark:text-red-400">{scaleError}</p>
+          {servingsError && (
+            <p className="text-xs text-red-600 dark:text-red-400">{servingsError}</p>
           )}
 
           {fetcher.data?.errors && (
