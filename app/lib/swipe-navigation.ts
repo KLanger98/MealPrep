@@ -7,6 +7,11 @@ const MIN_DISTANCE = 60;
 const MAX_DRIFT = 50;
 const MAX_MS = 600;
 
+/** Whether `pathname` is on the page at `href`; "/" only matches itself. */
+export function onPage(pathname: string, href: string): boolean {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
 /** The nearest ancestor that scrolls sideways itself (e.g. the filter row). */
 function insideHorizontalScroller(target: EventTarget | null): boolean {
   for (let el = target as HTMLElement | null; el; el = el.parentElement) {
@@ -35,7 +40,7 @@ export function useSwipeNavigation(
     const el = container.current;
     if (!el || !matchMedia("(pointer: coarse)").matches) return;
 
-    const index = pages.findIndex((href) => pathname.startsWith(href));
+    const index = pages.findIndex((href) => onPage(pathname, href));
     if (index === -1) return;
 
     let start: { x: number; y: number; at: number } | null = null;

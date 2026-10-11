@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router";
-import { useSwipeNavigation } from "../lib/swipe-navigation";
+import { onPage, useSwipeNavigation } from "../lib/swipe-navigation";
 import { useTheme, type Theme } from "../lib/theme";
 import { LogoMark } from "./logo";
 
 const NAV_ITEMS = [
+  { label: "Today", shortLabel: "Today", href: "/", icon: HomeIcon },
   { label: "Recipes", shortLabel: "Recipes", href: "/recipes", icon: BookIcon },
   { label: "Calendar", shortLabel: "Calendar", href: "/calendar", icon: CalendarIcon },
   { label: "Shopping Lists", shortLabel: "Shopping", href: "/shopping-lists", icon: CartIcon },
@@ -22,6 +23,14 @@ const THEME_LABELS: Record<Theme, string> = {
   light: "Theme: light",
   dark: "Theme: dark",
 };
+
+function HomeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5Z" />
+    </svg>
+  );
+}
 
 function BookIcon({ className }: { className?: string }) {
   return (
@@ -141,22 +150,22 @@ function SettingsMenu() {
   );
 }
 
-// Floating pill of the three main pages. The active highlight is one
+// Floating pill of the main pages. The active highlight is one
 // element that slides between items, so switching pages animates instead
 // of snapping.
 function MobileNav() {
   const { pathname } = useLocation();
-  const activeIndex = NAV_ITEMS.findIndex((item) => pathname.startsWith(item.href));
+  const activeIndex = NAV_ITEMS.findIndex((item) => onPage(pathname, item.href));
 
   return (
     <nav
       className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex justify-center px-4 sm:hidden"
       aria-label="Primary"
     >
-      <div className="relative grid grid-cols-3 rounded-full border border-stone-200 bg-paper/95 p-1 shadow-lg shadow-stone-900/10 backdrop-blur dark:border-stone-700 dark:bg-stone-900/95 dark:shadow-black/40">
+      <div className="relative grid grid-cols-4 rounded-full border border-stone-200 bg-paper/95 p-1 shadow-lg shadow-stone-900/10 backdrop-blur dark:border-stone-700 dark:bg-stone-900/95 dark:shadow-black/40">
         <div
           aria-hidden="true"
-          className={`absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-accent-50 transition-[transform,opacity] duration-300 ease-out dark:bg-accent-950 ${
+          className={`absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-accent-50 transition-[transform,opacity] duration-300 ease-out dark:bg-accent-950 ${
             activeIndex === -1 ? "opacity-0" : ""
           }`}
           style={{ transform: `translateX(${Math.max(activeIndex, 0) * 100}%)` }}
@@ -165,8 +174,9 @@ function MobileNav() {
           <NavLink
             key={item.label}
             to={item.href}
+            end={item.href === "/"}
             className={({ isActive }) =>
-              `relative flex w-[4.75rem] flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-colors duration-300 ${
+              `relative flex w-[4.5rem] flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-colors duration-300 ${
                 isActive
                   ? "text-accent-700 dark:text-accent-400"
                   : "text-stone-500 dark:text-stone-400"
@@ -200,7 +210,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="border-b border-stone-200 bg-paper dark:border-stone-800 dark:bg-stone-900">
         <div className="mx-auto flex max-w-6xl items-center gap-8 px-4 py-3 sm:px-6">
           <Link
-            to="/recipes"
+            to="/"
             className="flex items-center gap-2 text-lg font-semibold text-accent-700 dark:text-accent-400"
           >
             <LogoMark className="size-7" />
@@ -211,6 +221,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <NavLink
                 key={item.label}
                 to={item.href}
+                end={item.href === "/"}
                 className={({ isActive }) =>
                   `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                     isActive
